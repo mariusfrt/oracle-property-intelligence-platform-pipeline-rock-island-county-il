@@ -30,7 +30,10 @@ Provenance (`source_url`, `retrieved_at`) on every row, same discipline as parce
 captured under `data/raw/enrichment/` before load.
 
 ## Distance model (meters, uniform)
-Reproject everything to **EPSG:32615 (UTM 15N)** with `ST_Transform`, then use `ST_Distance` (meters).
+Reproject everything to **EPSG:32615 (UTM 15N)** with `ST_Transform(..., always_xy := true)`, then use
+`ST_Distance` (meters). The `always_xy` flag is REQUIRED: EPSG:4326 defaults to (lat, lon) axis order,
+so without it DuckDB reads stored (lon, lat) geometries wrong and `ST_Transform` returns `POINT(Infinity Infinity)`,
+collapsing all distances to 0/null.
 This works for points, lines, and polygons uniformly. Use the **parcel centroid** (`ST_Point(lon,lat)`)
 as the parcel location. For each parcel compute the **nearest** distance per layer and store as columns.
 

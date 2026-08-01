@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "ingest": "tsx src/cli.ts",
+    "enrich": "tsx src/enrich-cli.ts",
     "test": "vitest run"
   },
   "dependencies": {

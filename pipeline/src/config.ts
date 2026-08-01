@@ -20,8 +20,10 @@ export const FULL_PARCEL_COUNT = 65_956;
 
 export const PATHS = {
   rawParcels: path.join(REPO_ROOT, "data/raw/parcels"),
+  rawEnrichment: path.join(REPO_ROOT, "data/raw/enrichment"),
   parquet: path.join(REPO_ROOT, "data/parquet"),
   duckdb: path.join(REPO_ROOT, "data/rock-island.duckdb"),
+  enrichmentRunRecord: path.join(REPO_ROOT, "data/enrichment-run-record.json"),
 } as const;
 
 export function buildQueryUrl(
