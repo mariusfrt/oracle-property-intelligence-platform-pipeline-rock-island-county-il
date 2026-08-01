@@ -1,0 +1,11 @@
+{
+  "name": "oracle-rock-island-pipeline",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "ingest": "pnpm --filter @oracle/pipeline ingest"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  }
+}
