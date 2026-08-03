@@ -6,4 +6,12 @@ data/
 .turbo/
 .DS_Store
 apps/api/cdk.out/
-apps/api/cdk.out/
+
+# Next.js build output (contains build-time inlined env such as ACCESS_TOKEN)
+.next/
+**/.next/
+
+# Local env files — never commit secrets
+.env
+.env.*
+!.env.example
