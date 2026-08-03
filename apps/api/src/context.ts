@@ -1,5 +1,5 @@
 import type { DuckDbClient } from "./db/duckdb.js";
-import { createDuckDbClient, getParquetSource } from "./db/duckdb.js";
+import { getSharedDuckDbClient, resetSharedDuckDbClient } from "./db/duckdb.js";
 import type { Logger } from "@aws-lambda-powertools/logger";
 
 export interface ApiContext {
@@ -7,19 +7,10 @@ export interface ApiContext {
   duckdb: DuckDbClient;
 }
 
-let cachedClient: DuckDbClient | null = null;
-
 export function createApiContext(logger: Logger): ApiContext {
-  if (!cachedClient) {
-    cachedClient = createDuckDbClient({
-      parquetSource: getParquetSource(),
-      s3Region: process.env.S3_REGION ?? "us-east-2",
-    });
-  }
-  return { logger, duckdb: cachedClient };
+  return { logger, duckdb: getSharedDuckDbClient() };
 }
 
-export async function disposeApiContext(ctx: ApiContext): Promise<void> {
-  await ctx.duckdb.close();
-  cachedClient = null;
+export async function disposeApiContext(_ctx: ApiContext): Promise<void> {
+  await resetSharedDuckDbClient();
 }

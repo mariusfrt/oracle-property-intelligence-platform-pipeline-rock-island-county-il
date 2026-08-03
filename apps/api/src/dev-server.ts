@@ -3,12 +3,12 @@ import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { appRouter } from "./routers/index.js";
 import { createApiContext } from "./context.js";
-import { DEFAULT_LOCAL_PARQUET, getParquetSource } from "./db/duckdb.js";
+import { DEFAULT_LOCAL_PARQUET, getParquetPath } from "./db/duckdb.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
 
-if (!process.env.PARQUET_SOURCE && !process.env.PARQUET_S3_URI) {
-  process.env.PARQUET_SOURCE = DEFAULT_LOCAL_PARQUET;
+if (!process.env.PARQUET_PATH) {
+  process.env.PARQUET_PATH = DEFAULT_LOCAL_PARQUET;
 }
 
 const logger = new Logger({ serviceName: "oracle-rock-island-api-dev" });
@@ -33,4 +33,5 @@ const server = createHTTPServer({
 
 server.listen(PORT);
 console.log(`API dev server listening on http://localhost:${PORT}`);
-console.log(`Parquet source: ${getParquetSource()}`);
+console.log(`Parquet path: ${getParquetPath()}`);
+console.log(`Query engine: DuckDB-WASM (bundled Parquet buffer)`);

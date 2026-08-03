@@ -175,7 +175,7 @@ export const parcelsRouter = router({
         },
       },
       infraNote:
-        "Queried live via DuckDB in-memory over S3 Parquet (httpfs); no always-on hosted database.",
+        "Results are computed on demand from a single data file bundled inside the serverless API. There is no always-on database, so it only runs, and only costs, when a query comes in.",
       limitations: [...GLOBAL_LIMITATIONS],
     };
   }),

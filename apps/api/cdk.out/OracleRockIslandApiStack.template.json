@@ -122,65 +122,6 @@
        ],
        "Effect": "Allow",
        "Resource": "*"
-      },
-      {
-       "Action": [
-        "s3:GetObject*",
-        "s3:GetBucket*",
-        "s3:List*"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "ParquetDataBucket63F3F6DB",
-          "Arn"
-         ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           {
-            "Fn::GetAtt": [
-             "ParquetDataBucket63F3F6DB",
-             "Arn"
-            ]
-           },
-           "/*"
-          ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": [
-        "s3:GetObject",
-        "s3:ListBucket"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "ParquetDataBucket63F3F6DB",
-          "Arn"
-         ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           {
-            "Fn::GetAtt": [
-             "ParquetDataBucket63F3F6DB",
-             "Arn"
-            ]
-           },
-           "/*"
-          ]
-         ]
-        }
-       ]
       }
      ],
      "Version": "2012-10-17"
@@ -201,29 +142,18 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-680482610668-us-east-2",
-     "S3Key": "04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1.zip"
+     "S3Key": "7dc3f0072513af284f264e85f8fbc4156a0e23bf6450fe7c8b382d48d33a9035.zip"
     },
     "Environment": {
      "Variables": {
       "NODE_OPTIONS": "--enable-source-maps",
       "POWERTOOLS_SERVICE_NAME": "oracle-rock-island-api",
       "POWERTOOLS_METRICS_NAMESPACE": "OracleRockIsland",
-      "PARQUET_S3_URI": {
-       "Fn::Join": [
-        "",
-        [
-         "s3://",
-         {
-          "Ref": "ParquetDataBucket63F3F6DB"
-         },
-         "/parquet/parcels_enriched_api.parquet"
-        ]
-       ]
-      }
+      "PARQUET_PATH": "parcels_enriched_api.parquet"
      }
     },
     "Handler": "index.handler",
-    "MemorySize": 1024,
+    "MemorySize": 1536,
     "Role": {
      "Fn::GetAtt": [
       "TrpcHandlerServiceRoleD16CD14E",
@@ -242,7 +172,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "OracleRockIslandApiStack/TrpcHandler/Resource",
-    "aws:asset:path": "asset.04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1",
+    "aws:asset:path": "asset.7dc3f0072513af284f264e85f8fbc4156a0e23bf6450fe7c8b382d48d33a9035",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -360,7 +290,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/12PzWrDMBCEnyV3edvakHsSKM2lLc4DmI2tmPWPZLyrmCD07kWW20BP38wwGkk55PsCXne4cFY3fTbQFfxFsO4VLlx5LsAfXd1rUaeb2VTCtx2ofjzjzSdzRNZBDTheG6yMbXTH8Lni3ZlayBpFOIIv7aDjxMrnYlJBcVEhsxaGQ8Q2CP50M387sa7nkZjJmqBwohZFL/i45+A/RKbDRLEUEe1FsF3vTCJGpXWS1NmIbmf8Hf5n114Ian1MPE6mjfmXk8lJUPGj0PHLPX+DPeS7jomy2RmhUUOZ+AOy2IbfcgEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/12PzWrDMBCEnyV3eRNs6D0JlPbSFucBzMZWzPpHMt5VTBB69yDLbaAg+GaW0ayUQ/5WwGGHC2d102cDXcFfBOte4cKV5wL8ydW9FnW+mU0l/NiB6sdrvPlkTsg6qAHHa4OVsY3uGL5WvDtTC1mjCEfwpR10rFj5akwqKC4qZNbCcIzYCsGfb+avJ8b1PBIzWRMUTtSi6AUf9xz8h8h0nCiGIqK9CLbrziTiqLROkvo0otsZf4v/2TUXglofE6+TaeP828nkJKj4Ueh4f88PEM+uY6JsdkZo1FAmPgHkeW/pcwEAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "OracleRockIslandApiStack/CDKMetadata/Default"
@@ -378,12 +308,13 @@
    }
   },
   "ParquetBucketName": {
-   "Description": "Upload parcels_enriched_api.parquet here",
+   "Description": "Retained for later IPFS/publish — not used by the query runtime",
    "Value": {
     "Ref": "ParquetDataBucket63F3F6DB"
    }
   },
   "ParquetS3Uri": {
+   "Description": "Optional archive location (runtime uses the bundled Parquet asset)",
    "Value": {
     "Fn::Join": [
      "",

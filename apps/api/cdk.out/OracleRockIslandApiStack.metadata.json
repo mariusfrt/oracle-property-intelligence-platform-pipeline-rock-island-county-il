@@ -25,7 +25,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:96:5)",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:107:5)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -39,7 +39,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:101:5)",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:112:5)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -53,7 +53,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:106:5)",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:117:5)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -67,7 +67,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "....pnpm...",
+        "...aws-cdk-lib...",
         "(no user code in 10 frames, use --stack-trace-limit to capture more)"
       ]
     }
@@ -80,7 +80,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "....pnpm...",
+        "...aws-cdk-lib...",
         "(no user code in 10 frames, use --stack-trace-limit to capture more)"
       ]
     }
@@ -93,8 +93,8 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new Bucket2 in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:38:23)",
+        "...new Bucket2 in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:44:23)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -108,8 +108,8 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new NodejsFunction in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:46:21)",
+        "...new NodejsFunction in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:52:21)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -123,8 +123,8 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new HttpApi2 in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:76:20)",
+        "...new HttpApi2 in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:87:20)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -138,7 +138,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...App.synth in .pnpm...",
+        "...App.synth in aws-cdk-lib...",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:15:5)",
         "...node internals..."
       ]
@@ -152,8 +152,8 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new Bucket2 in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:38:23)",
+        "...new Bucket2 in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:44:23)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)"
       ]
     }
@@ -166,8 +166,8 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new NodejsFunction in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:46:21)",
+        "...new NodejsFunction in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:52:21)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -181,8 +181,8 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new HttpApi2 in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:76:20)",
+        "...new HttpApi2 in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:87:20)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -196,10 +196,10 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        ".../Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/node_modules/.pnpm/aws-cdk-lib@2.263.0_constructs@10.8.0/node_modules/aws-cdk-lib/aws-apigatewayv2/lib/http/api.js:1:96 in .pnpm...",
+        ".../Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/node_modules/aws-cdk-lib/aws-apigatewayv2/lib/http/api.js:1:96 in aws-cdk-lib...",
         "Array.map (:)",
-        "...WrappedClass.<anonymous> in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:90:18)"
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:101:18)"
       ]
     }
   ],
@@ -211,10 +211,10 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        ".../Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/node_modules/.pnpm/aws-cdk-lib@2.263.0_constructs@10.8.0/node_modules/aws-cdk-lib/aws-apigatewayv2/lib/http/api.js:1:96 in .pnpm...",
+        ".../Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/node_modules/aws-cdk-lib/aws-apigatewayv2/lib/http/api.js:1:96 in aws-cdk-lib...",
         "Array.map (:)",
-        "...WrappedClass.<anonymous> in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:90:18)",
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:101:18)",
         "<anonymous> (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/bin/app.ts:7:1)",
         "...node internals..."
       ]
@@ -228,7 +228,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "....pnpm...",
+        "...aws-cdk-lib...",
         "(no user code in 10 frames, use --stack-trace-limit to capture more)"
       ]
     }
@@ -241,10 +241,10 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        ".../Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/node_modules/.pnpm/aws-cdk-lib@2.263.0_constructs@10.8.0/node_modules/aws-cdk-lib/aws-apigatewayv2/lib/http/api.js:1:96 in .pnpm...",
+        ".../Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/node_modules/aws-cdk-lib/aws-apigatewayv2/lib/http/api.js:1:96 in aws-cdk-lib...",
         "Array.map (:)",
-        "...WrappedClass.<anonymous> in .pnpm...",
-        "ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:90:18)"
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new ApiStack (/Users/work/Desktop/prism-assignment/oracle-property-intelligence-platform-pipeline-rock-island-county-il/apps/api/cdk/lib/api-stack.ts:101:18)"
       ]
     }
   ]
