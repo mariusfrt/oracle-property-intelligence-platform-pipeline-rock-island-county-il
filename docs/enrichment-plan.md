@@ -1,4 +1,4 @@
-# Phase 2 — Enrichment Plan (power + POIs + proximity)
+# Enrichment (power, POIs, and proximity)
 
 Adds the external layers the data-center and general-property questions need, then builds the
 `parcels_enriched` view. All sources verified live 2026-08-01. Bounding box used for every
@@ -62,7 +62,7 @@ dc_candidate   = acreage >= :min_acres AND is_industrial AND stable_ownership AN
 Every proximity answer returns the **computed distance** so it is source-/evidence-backed. Keep the
 raw county zoning faithful in `parcels`; `zoning_norm` lives only in the enriched view.
 
-## Deliverables (Phase 2)
+## Deliverables
 - `power_lines`, `power_substations`, `poi` tables loaded + raw captured.
 - `parcels_enriched` view (or materialized table) with the columns above.
 - Parquet export of `parcels_enriched` for the query layer.

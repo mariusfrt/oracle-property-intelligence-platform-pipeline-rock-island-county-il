@@ -1,4 +1,4 @@
-# Ingest Plan & DuckDB Schema — Rock Island County
+# Ingest and DuckDB Schema — Rock Island County
 
 How the county parcel fabric (and external layers) get pulled, normalized, queried, and published,
 using **DuckDB + IPFS so no always-on Oracle database is required** (the assignment's cost thesis).

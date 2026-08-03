@@ -1,4 +1,4 @@
-# Rock Island County Ingest Pipeline (Phase 1)
+# Rock Island County Ingest Pipeline
 
 Lightweight TypeScript CLI that pulls Rock Island County parcel GeoJSON from ArcGIS, normalizes into DuckDB, and exports Parquet.
 

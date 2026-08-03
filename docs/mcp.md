@@ -98,7 +98,7 @@ Replace the URL with your deployed `ApiUrl` + `/mcp`. No auth headers are requir
 
 ## Local-only stdio (optional)
 
-For Cursor on a developer machine only (not for grading demos):
+For Cursor on a developer machine only (local development):
 
 ```bash
 pnpm --filter @oracle/api exec tsx src/mcp-stdio.ts
@@ -118,7 +118,7 @@ Cursor `mcp.json` example:
 }
 ```
 
-Prefer the hosted `POST /mcp` endpoint for demos. Localhost-only stdio is not the graded path.
+Prefer the hosted `POST /mcp` endpoint. The localhost stdio server is for local development only.
 
 ## Pattern note
 
