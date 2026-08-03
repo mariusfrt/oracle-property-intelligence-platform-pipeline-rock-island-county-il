@@ -11,7 +11,7 @@ applications:
             - pnpm --filter @oracle/api build
         build:
           commands:
-            - ../../node_modules/.bin/next build
+            - pnpm --filter @oracle/web exec next build
       artifacts:
         baseDirectory: .next
         files:
