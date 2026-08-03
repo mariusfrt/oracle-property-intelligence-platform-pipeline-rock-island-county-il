@@ -5,7 +5,7 @@ applications:
       phases:
         preBuild:
           commands:
-            - corepack enable
+            - npm install -g pnpm@9.15.0
             - cd ../.. && pnpm install --frozen-lockfile
             - pnpm --filter @oracle/shared build
         build:
