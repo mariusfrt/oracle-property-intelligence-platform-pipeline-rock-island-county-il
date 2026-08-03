@@ -24,6 +24,6 @@ export function mapParcelRow(record: Record<string, unknown>): ParcelResultRow {
   };
 }
 
-export function mapParcelRows(rows: Record<string, unknown>[]): ParcelResultRow[] {
-  return rows.map(mapParcelRow);
+export function mapParcelRows(rows: Record<string, unknown>[] | null | undefined): ParcelResultRow[] {
+  return (rows ?? []).map(mapParcelRow);
 }

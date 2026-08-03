@@ -1,10 +1,14 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
 import type { ParcelResultRow } from "@/lib/parcel-rows";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+
+type SortKey = "pin" | "site_address" | "acreage" | "zoning" | "owner_name" | "dist_to_power_m";
 
 interface ResultsTableProps {
   rows: ParcelResultRow[];
@@ -46,6 +50,58 @@ export function ResultsTable({
   const colSpan = (showDistToPower ? 1 : 0) + (showRank ? 1 : 0) + 5;
   const totalPages =
     total != null && pageSize != null && pageSize > 0 ? Math.ceil(total / pageSize) : null;
+
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const sortedRows = useMemo(() => {
+    if (!sortKey) return rows;
+    const dir = sortDir === "asc" ? 1 : -1;
+    const numeric = sortKey === "acreage" || sortKey === "dist_to_power_m";
+    const val = (r: ParcelResultRow): string | number | null => {
+      const v = r[sortKey];
+      if (sortKey === "dist_to_power_m" && typeof v === "number" && v >= 1e17) return null;
+      return v ?? null;
+    };
+    return [...rows].sort((a, b) => {
+      const av = val(a);
+      const bv = val(b);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (numeric) return ((av as number) - (bv as number)) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }, [rows, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  function SortHeader({ sortableKey, label, align }: { sortableKey: SortKey; label: string; align?: "right" }) {
+    const active = sortKey === sortableKey;
+    const Icon = active ? (sortDir === "asc" ? ChevronUp : ChevronDown) : ChevronsUpDown;
+    return (
+      <th className={`label-caps px-3 py-2.5 font-medium ${align === "right" ? "text-right" : ""}`}>
+        <button
+          type="button"
+          onClick={() => toggleSort(sortableKey)}
+          className={`inline-flex items-center gap-1 hover:text-slate-900 focus-ring rounded ${
+            active ? "text-slate-900" : ""
+          } ${align === "right" ? "flex-row-reverse" : ""}`}
+          aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+        >
+          {label}
+          <Icon className={`h-3 w-3 ${active ? "text-indigo-600" : "opacity-40"}`} aria-hidden />
+        </button>
+      </th>
+    );
+  }
 
   return (
     <div className={`card flex min-h-0 flex-col overflow-hidden p-0 ${className}`}>
@@ -94,18 +150,18 @@ export function ResultsTable({
                 {showRank ? (
                   <th className="label-caps w-12 px-3 py-2.5 font-medium">#</th>
                 ) : null}
-                <th className="label-caps px-3 py-2.5 font-medium">PIN</th>
-                <th className="label-caps px-3 py-2.5 font-medium">Address</th>
-                <th className="label-caps px-3 py-2.5 font-medium text-right">Acres</th>
-                <th className="label-caps px-3 py-2.5 font-medium">Zoning</th>
-                <th className="label-caps px-3 py-2.5 font-medium">Owner</th>
+                <SortHeader sortableKey="pin" label="PIN" />
+                <SortHeader sortableKey="site_address" label="Address" />
+                <SortHeader sortableKey="acreage" label="Acres" align="right" />
+                <SortHeader sortableKey="zoning" label="Zoning" />
+                <SortHeader sortableKey="owner_name" label="Owner" />
                 {showDistToPower ? (
-                  <th className="label-caps px-3 py-2.5 font-medium text-right">Power</th>
+                  <SortHeader sortableKey="dist_to_power_m" label="Power" align="right" />
                 ) : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rows.map((row, index) => {
+              {sortedRows.map((row, index) => {
                 const rank =
                   page != null && pageSize != null ? (page - 1) * pageSize + index + 1 : index + 1;
                 const distPower =
@@ -131,20 +187,20 @@ export function ResultsTable({
                       {row.pin ?? row.objectid}
                     </td>
                     <td className="max-w-[10rem] truncate px-3 py-2.5 text-slate-600">
-                      {row.site_address ?? "—"}
+                      {row.site_address ?? "-"}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums font-medium text-slate-900">
-                      {row.acreage != null ? row.acreage.toFixed(2) : "—"}
+                      {row.acreage != null ? row.acreage.toFixed(2) : "-"}
                     </td>
                     <td className="px-3 py-2.5">
                       {row.zoning ? (
                         <Badge variant="muted">{row.zoning}</Badge>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
                     <td className="max-w-[8rem] truncate px-3 py-2.5 text-slate-600">
-                      {row.owner_name ?? "—"}
+                      {row.owner_name ?? "-"}
                     </td>
                     {showDistToPower ? (
                       <td className="whitespace-nowrap px-3 py-2.5 text-right">
@@ -153,7 +209,7 @@ export function ResultsTable({
                             {distPower.toLocaleString()} m
                           </Badge>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400">-</span>
                         )}
                       </td>
                     ) : null}
