@@ -133,7 +133,7 @@ export function RunSummary({ summary, artifacts = null, loading }: RunSummaryPro
           <div className="min-w-0">
             <p className="label-caps flex items-center gap-1.5 text-indigo-600">
               County coverage · parcels ingested
-              <InfoTooltip text="These figures are read live from cloud storage each time the page loads. There is no always-on database to run or maintain." />
+              <InfoTooltip text="These figures are read live each time the page loads." />
             </p>
             <p className="text-2xl font-semibold leading-none tracking-tight text-slate-900 tabular-nums sm:text-3xl">
               {parcels.count.toLocaleString()}
