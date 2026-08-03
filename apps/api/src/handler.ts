@@ -50,6 +50,15 @@ export async function handler(
   event: APIGatewayProxyEventV2,
   context: LambdaContext,
 ): Promise<APIGatewayProxyStructuredResultV2 | unknown> {
+  // CORS preflight: the {proxy+} route sends OPTIONS to this Lambda, and tRPC
+  // answers 415, which browsers treat as a failed preflight (Failed to fetch on
+  // POST mutations like agent.ask). Answer OPTIONS with 204; API Gateway adds the
+  // Access-Control-* headers from the stack's CORS config.
+  const method = event.requestContext?.http?.method ?? "";
+  if (method === "OPTIONS") {
+    return { statusCode: 204, body: "" };
+  }
+
   const path = resolvePath(event);
   if (isMcpPath(path)) {
     return mcpHandler(event);
