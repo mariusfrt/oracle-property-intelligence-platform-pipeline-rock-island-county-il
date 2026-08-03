@@ -20,6 +20,16 @@ import {
   type DuckDbClient,
 } from "../db/duckdb.js";
 
+/**
+ * Restrict property queries to real, numbered parcels. The county service also
+ * includes ~126 administrative placeholder records with non-numeric PINs
+ * (USA/federal, RAILROAD, LEVEE ROW, LOCK DAM, STATE, CITY, ...), several of which
+ * are river or federal features whose geometry falls along or outside the county
+ * boundary. These are excluded from query results; the run summary still reports
+ * the full ingested total.
+ */
+const NUMBERED_PARCEL_FILTER = "regexp_matches(pin, '^[0-9]')";
+
 export function buildSearchWhereClause(filters: SearchParcelsInput): {
   sql: string;
   params: unknown[];
@@ -110,14 +120,16 @@ export async function queryPaged(
   orderBy: string,
 ): Promise<PagedParcelsResponse> {
   const table = PARCELS_API_TABLE;
+  // Scope every query to numbered parcels (excludes administrative placeholders).
+  const scopedWhere = `${NUMBERED_PARCEL_FILTER} AND (${whereSql})`;
   const total = await duckdb.count(
-    `SELECT COUNT(*)::BIGINT AS count FROM ${table} WHERE ${whereSql}`,
+    `SELECT COUNT(*)::BIGINT AS count FROM ${table} WHERE ${scopedWhere}`,
     whereParams,
   );
 
   const { sql: limitSql, params: limitParams } = paginationClause(page, pageSize);
   const rows = await duckdb.query<Record<string, unknown>>(
-    `SELECT ${selectColumns.join(", ")} FROM ${table} WHERE ${whereSql} ORDER BY ${orderBy} ${limitSql}`,
+    `SELECT ${selectColumns.join(", ")} FROM ${table} WHERE ${scopedWhere} ORDER BY ${orderBy} ${limitSql}`,
     [...whereParams, ...limitParams],
   );
 
