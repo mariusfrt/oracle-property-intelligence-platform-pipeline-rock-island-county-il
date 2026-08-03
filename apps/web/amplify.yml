@@ -8,6 +8,7 @@ applications:
             - npm install -g pnpm@9.15.0
             - cd ../.. && pnpm install --frozen-lockfile
             - pnpm --filter @oracle/shared build
+            - pnpm --filter @oracle/api build
         build:
           commands:
             - cd ../.. && pnpm --filter @oracle/web build
