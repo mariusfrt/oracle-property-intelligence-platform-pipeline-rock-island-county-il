@@ -4,7 +4,7 @@
   - Login access token: `beaa40577ad554e76eeb9e95eb1421e8`
 - **Query API:** https://i1idbrbaq3.execute-api.us-east-2.amazonaws.com
 - **MCP endpoint (Streamable HTTP):** `POST https://i1idbrbaq3.execute-api.us-east-2.amazonaws.com/mcp`
-- **Demo video:** _add link here_
+- **Demo video:** https://www.loom.com/share/94779159fe4d47b6bd1ccfb35f1df1cd
 - **Docs:** [architecture](docs/architecture.md) · [MCP](docs/mcp.md) · [IPFS / PII decision](docs/decisions/ipfs-publication.md)
 
 Everything runs serverless with no always-on cost: native DuckDB queries a Parquet
