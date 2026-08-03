@@ -17,7 +17,7 @@ export interface ApiStackProps extends cdk.StackProps {
 
 /**
  * API Gateway HTTP API + Lambda (tRPC) querying a Parquet file bundled into the
- * function asset via DuckDB-WASM. Region: us-east-2.
+ * function asset via native DuckDB (@duckdb/node-api). Region: us-east-2.
  *
  * Runtime does NOT depend on S3/httpfs — the private bucket is retained for
  * the later publish story only.
@@ -71,14 +71,32 @@ export class ApiStack extends cdk.Stack {
         // fileURLToPath in db/duckdb.ts). CJS output leaves import.meta empty and
         // the handler throws on load. Matches the ESM source + local tsx runtime.
         format: nodejs.OutputFormat.ESM,
-        // Keep DuckDB-WASM + worker/wasm assets as real node_modules (not esbuild-inlined).
-        nodeModules: ["@duckdb/duckdb-wasm", "apache-arrow", "web-worker"],
+        // ESM output turns `require` into a stub that throws "Dynamic require not
+        // supported". Bundled CJS deps (powertools → aws-xray-sdk-core → cls-hooked)
+        // call require() at runtime, so recreate a real require via this banner;
+        // esbuild's stub then falls back to it. Also restores __filename/__dirname.
+        banner: [
+          "import { createRequire as __cdkCreateRequire } from 'module';",
+          "import { fileURLToPath as __cdkFileURLToPath } from 'url';",
+          "import { dirname as __cdkDirname } from 'path';",
+          "const require = __cdkCreateRequire(import.meta.url);",
+          "const __filename = __cdkFileURLToPath(import.meta.url);",
+          "const __dirname = __cdkDirname(__filename);",
+        ].join("\n"),
+        // Keep native DuckDB as a real node_module (native bindings, not esbuild-inlined).
+        nodeModules: ["@duckdb/node-api"],
         commandHooks: {
           beforeBundling: () => [],
           beforeInstall: () => [],
           afterBundling: (_inputDir: string, outputDir: string): string[] => [
-            // Bundle the Parquet into the Lambda asset for registerFileBuffer at runtime.
+            // Bundle the Parquet into the Lambda asset for read_parquet at runtime.
             `cp "${localParquetPath}" "${path.join(outputDir, "parcels_enriched_api.parquet")}"`,
+            // Force-install the linux-x64 binding so Lambda has the right binary
+            // even when synthesizing on macOS (--force bypasses npm's libc check).
+            `npm install --prefix "${outputDir}" --no-save --no-audit --no-fund --force @duckdb/node-bindings-linux-x64@1.5.5-r.3`,
+            // Drop the host (darwin) binding CDK installed — dead weight on a linux
+            // Lambda (~68MB with its own libduckdb.so); keeps the asset well under 250MB.
+            `rm -rf "${path.join(outputDir, "node_modules/@duckdb/node-bindings-darwin-x64")}" "${path.join(outputDir, "node_modules/@duckdb/node-bindings-darwin-arm64")}"`,
           ],
         },
       },

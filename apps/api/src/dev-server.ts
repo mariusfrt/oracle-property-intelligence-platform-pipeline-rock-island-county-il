@@ -34,4 +34,4 @@ const server = createHTTPServer({
 server.listen(PORT);
 console.log(`API dev server listening on http://localhost:${PORT}`);
 console.log(`Parquet path: ${getParquetPath()}`);
-console.log(`Query engine: DuckDB-WASM (bundled Parquet buffer)`);
+console.log(`Query engine: DuckDB native (@duckdb/node-api) over bundled Parquet`);

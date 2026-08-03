@@ -1,11 +1,7 @@
-import * as duckdb from "@duckdb/duckdb-wasm";
-import fs from "node:fs";
+import { DuckDBInstance, type DuckDBConnection, type DuckDBValue } from "@duckdb/node-api";
 import path from "node:path";
-import { createRequire } from "node:module";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import Worker from "web-worker";
+import { fileURLToPath } from "node:url";
 
-const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** Default local Parquet path (repo root data/parquet). */
@@ -13,8 +9,6 @@ export const DEFAULT_LOCAL_PARQUET = path.resolve(
   __dirname,
   "../../../../data/parquet/parcels_enriched_api.parquet",
 );
-
-const VIRTUAL_PARQUET_NAME = "parcels_enriched_api.parquet";
 
 export const PARCELS_API_TABLE = "parcels_enriched_api";
 
@@ -32,17 +26,13 @@ export interface DuckDbClientConfig {
   parquetPath: string;
 }
 
-type NodeWorker = InstanceType<typeof Worker>;
-
-/** Minimal Arrow table shape returned by DuckDB-WASM query(). */
-interface ArrowLikeTable {
-  schema: { fields: ReadonlyArray<{ name: string }> };
-  toArray(): Array<Record<string, unknown>>;
-}
-
 /** Escape `%`, `_`, and `\` for use in parameterized LIKE … ESCAPE '\\' patterns. */
 export function escapeLikePattern(term: string): string {
   return term.replace(/[%_\\]/g, "\\$&");
+}
+
+function escapeSqlString(value: string): string {
+  return value.replace(/'/g, "''");
 }
 
 /**
@@ -83,8 +73,14 @@ function normalizeValue(value: unknown): unknown {
     return value.map(normalizeValue);
   }
   if (value !== null && typeof value === "object") {
-    // Arrow Row / StructRow often have non-enumerable field accessors —
-    // prefer schema-driven conversion in tableToRows; this branch covers plain objects.
+    // Neo returns temporal/decimal columns as DuckDBValue class instances
+    // (e.g. TIMESTAMP -> { micros }). Those are NOT plain objects; left alone they
+    // collapse to {} in JSON and crash React. Stringify any non-plain object via its
+    // toString (gives "2026-08-01 14:10:14.833" etc). Plain nested structs recurse.
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== null && proto !== Object.prototype) {
+      return String(value);
+    }
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, normalizeValue(v)]),
     );
@@ -92,90 +88,38 @@ function normalizeValue(value: unknown): unknown {
   return value;
 }
 
-function tableToRows<T extends Record<string, unknown>>(table: ArrowLikeTable): T[] {
-  const names = table.schema.fields.map((f) => f.name);
-  return table.toArray().map((row) => {
+function readerToRows<T extends Record<string, unknown>>(reader: {
+  columnNames(): string[];
+  getRows(): unknown[][];
+}): T[] {
+  const names = reader.columnNames();
+  return reader.getRows().map((cells) => {
     const obj: Record<string, unknown> = {};
-    for (const name of names) {
-      obj[name] = normalizeValue(row[name]);
+    for (let i = 0; i < names.length; i++) {
+      obj[names[i]!] = normalizeValue(cells[i]);
     }
     return obj as T;
   });
 }
 
-function resolveDuckDbDist(): string {
-  return path.dirname(require.resolve("@duckdb/duckdb-wasm/dist/duckdb-node.cjs"));
-}
-
-async function instantiateAsyncDuckDb(): Promise<{
-  db: duckdb.AsyncDuckDB;
-  worker: NodeWorker;
-}> {
-  const dist = resolveDuckDbDist();
-  const bundles: duckdb.DuckDBBundles = {
-    mvp: {
-      mainModule: path.join(dist, "duckdb-mvp.wasm"),
-      mainWorker: pathToFileURL(path.join(dist, "duckdb-node-mvp.worker.cjs")).href,
-    },
-    eh: {
-      mainModule: path.join(dist, "duckdb-eh.wasm"),
-      mainWorker: pathToFileURL(path.join(dist, "duckdb-node-eh.worker.cjs")).href,
-    },
-  };
-
-  const bundle = await duckdb.selectBundle(bundles);
-  if (!bundle.mainWorker) {
-    throw new Error("DuckDB-WASM bundle is missing mainWorker");
-  }
-
-  // Node classic workers use importScripts (breaks CJS); module workers import() the .cjs fine.
-  const worker = new Worker(bundle.mainWorker, { type: "module" });
-  const logger = new duckdb.VoidLogger();
-  const db = new duckdb.AsyncDuckDB(logger, worker);
-  await db.instantiate(bundle.mainModule, bundle.pthreadWorker ?? undefined);
-  return { db, worker };
-}
-
-async function registerParquetView(
-  db: duckdb.AsyncDuckDB,
-  parquetPath: string,
-): Promise<void> {
-  const absolute = path.resolve(parquetPath);
-  if (!fs.existsSync(absolute)) {
-    throw new Error(`Parquet file not found: ${absolute}`);
-  }
-
-  const buffer = new Uint8Array(fs.readFileSync(absolute));
-  await db.registerFileBuffer(VIRTUAL_PARQUET_NAME, buffer);
-
-  const conn = await db.connect();
-  try {
-    await conn.query(
-      `CREATE OR REPLACE VIEW ${PARCELS_API_TABLE} AS SELECT * FROM read_parquet('${VIRTUAL_PARQUET_NAME}')`,
-    );
-  } finally {
-    await conn.close();
-  }
-}
-
 /**
- * Create a DuckDB-WASM client that registers the Parquet buffer and exposes
- * `parcels_enriched_api`. Initialization is lazy on first query.
+ * Create a native DuckDB client that registers the Parquet path as a view.
+ * Initialization is lazy on first query (singleton reused via getSharedDuckDbClient).
  */
 export function createDuckDbClient(config: DuckDbClientConfig): DuckDbClient {
-  let db: duckdb.AsyncDuckDB | null = null;
-  let worker: NodeWorker | null = null;
-  let conn: duckdb.AsyncDuckDBConnection | null = null;
+  let instance: DuckDBInstance | null = null;
+  let conn: DuckDBConnection | null = null;
   let initPromise: Promise<void> | null = null;
 
   const ensureInit = (): Promise<void> => {
     if (!initPromise) {
       initPromise = (async () => {
-        const instantiated = await instantiateAsyncDuckDb();
-        db = instantiated.db;
-        worker = instantiated.worker;
-        await registerParquetView(db, config.parquetPath);
-        conn = await db.connect();
+        const parquetPath = path.resolve(config.parquetPath);
+        instance = await DuckDBInstance.create(":memory:");
+        conn = await instance.connect();
+        await conn.run(
+          `CREATE OR REPLACE VIEW ${PARCELS_API_TABLE} AS SELECT * FROM read_parquet('${escapeSqlString(parquetPath)}')`,
+        );
       })();
     }
     return initPromise;
@@ -190,17 +134,14 @@ export function createDuckDbClient(config: DuckDbClientConfig): DuckDbClient {
       if (!conn) throw new Error("DuckDB connection not initialized");
 
       if (params.length === 0) {
-        const table = await conn.query(sql);
-        return tableToRows<T>(table);
+        const reader = await conn.runAndReadAll(sql);
+        return readerToRows<T>(reader);
       }
 
-      const stmt = await conn.prepare(sql);
-      try {
-        const table = await stmt.query(...params);
-        return tableToRows<T>(table);
-      } finally {
-        await stmt.close();
-      }
+      const prepared = await conn.prepare(sql);
+      prepared.bind(params as DuckDBValue[]);
+      const reader = await prepared.runAndReadAll();
+      return readerToRows<T>(reader);
     },
 
     async count(sql: string, params: unknown[] = []): Promise<number> {
@@ -210,23 +151,19 @@ export function createDuckDbClient(config: DuckDbClientConfig): DuckDbClient {
 
     async close(): Promise<void> {
       if (conn) {
-        await conn.close();
+        conn.closeSync();
         conn = null;
       }
-      if (db) {
-        await db.terminate();
-        db = null;
-      }
-      if (worker) {
-        worker.terminate();
-        worker = null;
+      if (instance) {
+        instance.closeSync();
+        instance = null;
       }
       initPromise = null;
     },
   };
 }
 
-/** Module-scope singleton — warm Lambda invocations reuse the same WASM instance. */
+/** Module-scope singleton — warm Lambda invocations reuse the same DuckDB instance. */
 let sharedClient: DuckDbClient | null = null;
 
 export function getSharedDuckDbClient(): DuckDbClient {
