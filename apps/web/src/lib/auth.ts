@@ -1,5 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
-
 const ACCESS_COOKIE = "oracle_access_token";
 
 export function getAccessCookieName(): string {
@@ -7,18 +5,25 @@ export function getAccessCookieName(): string {
 }
 
 /**
- * Constant-time comparison of access token.
- * Token is read from ACCESS_TOKEN env (server) — never embedded in client bundle.
+ * Constant-time token comparison using only Edge-compatible APIs (TextEncoder).
+ * Avoids node:crypto/Buffer so the gate runs in Next.js middleware (Edge runtime)
+ * as well as Node route handlers. Token read from ACCESS_TOKEN env (server only,
+ * never NEXT_PUBLIC_*).
  */
 export function verifyAccessToken(provided: string | undefined | null): boolean {
   const expected = process.env.ACCESS_TOKEN;
   if (!expected || !provided) return false;
 
-  const a = Buffer.from(provided, "utf8");
-  const b = Buffer.from(expected, "utf8");
+  const enc = new TextEncoder();
+  const a = enc.encode(provided);
+  const b = enc.encode(expected);
   if (a.length !== b.length) return false;
 
-  return timingSafeEqual(a, b);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
 }
 
 export function getAccessTokenFromCookie(cookieHeader: string | null): string | null {
