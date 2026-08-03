@@ -5,3 +5,4 @@ data/
 *.duckdb.wal
 .turbo/
 .DS_Store
+apps/api/cdk.out/
