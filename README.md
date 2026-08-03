@@ -1,3 +1,19 @@
+# Submission — live demo and access
+
+- **Web app:** https://feat-rock-island-pipeline.d3fduxp94kag5s.amplifyapp.com
+  - Login access token: `beaa40577ad554e76eeb9e95eb1421e8`
+- **Query API:** https://i1idbrbaq3.execute-api.us-east-2.amazonaws.com
+- **MCP endpoint (Streamable HTTP):** `POST https://i1idbrbaq3.execute-api.us-east-2.amazonaws.com/mcp`
+- **Demo video:** _add link here_
+- **Docs:** [architecture](docs/architecture.md) · [MCP](docs/mcp.md) · [IPFS / PII decision](docs/decisions/ipfs-publication.md)
+
+Everything runs serverless with no always-on cost: native DuckDB queries a Parquet
+file bundled into the Lambda, eligible non-personal artifacts are published to IPFS,
+and the UI, Bedrock agent, and MCP server all share one query layer. Owner and
+financial data stay behind the access-gated app and are never published to IPFS.
+
+---
+
 # Oracle Property Intelligence Platform Pipeline - Rock Island County, IL
 
 ## Context
