@@ -111,7 +111,13 @@ export class ApiStack extends cdk.Stack {
       corsPreflight: {
         allowOrigins: ["*"],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
-        allowHeaders: ["Content-Type", "Authorization"],
+        allowHeaders: [
+          "Content-Type",
+          "Authorization",
+          "Accept",
+          "Mcp-Session-Id",
+          "MCP-Protocol-Version",
+        ],
       },
     });
 
@@ -119,6 +125,13 @@ export class ApiStack extends cdk.Stack {
       "TrpcIntegration",
       handler,
     );
+
+    // Explicit MCP routes BEFORE the catch-all so /mcp is not swallowed by tRPC.
+    this.httpApi.addRoutes({
+      path: "/mcp",
+      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.GET],
+      integration: lambdaIntegration,
+    });
 
     this.httpApi.addRoutes({
       path: "/{proxy+}",
@@ -128,7 +141,7 @@ export class ApiStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "ApiUrl", {
       value: this.httpApi.apiEndpoint,
-      description: "API Gateway URL — set as NEXT_PUBLIC_API_URL for apps/web",
+      description: "API Gateway URL. Set as NEXT_PUBLIC_API_URL for apps/web. MCP: POST {ApiUrl}/mcp",
     });
   }
 }
