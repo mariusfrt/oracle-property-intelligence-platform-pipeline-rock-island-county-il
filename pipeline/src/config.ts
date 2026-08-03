@@ -24,6 +24,8 @@ export const PATHS = {
   parquet: path.join(REPO_ROOT, "data/parquet"),
   duckdb: path.join(REPO_ROOT, "data/rock-island.duckdb"),
   enrichmentRunRecord: path.join(REPO_ROOT, "data/enrichment-run-record.json"),
+  publicParquet: path.join(REPO_ROOT, "data/parquet/parcels_enriched_public.parquet"),
+  ipfsManifest: path.join(REPO_ROOT, "data/ipfs-manifest.json"),
 } as const;
 
 export function buildQueryUrl(

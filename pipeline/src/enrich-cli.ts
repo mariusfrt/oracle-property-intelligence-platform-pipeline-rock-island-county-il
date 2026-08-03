@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 import { buildParcelsEnriched } from "./enrichment/build.js";
-import { exportParcelsEnriched, exportParcelsEnrichedApi } from "./enrichment/export-enriched.js";
+import {
+  exportParcelsEnriched,
+  exportParcelsEnrichedApi,
+  exportParcelsEnrichedPublic,
+} from "./enrichment/export-enriched.js";
 import { fetchEnrichmentLayers } from "./enrichment/fetch.js";
 import { loadEnrichmentLayers } from "./enrichment/load.js";
+import { publishEligibleArtifactsToIpfs } from "./enrichment/publish-ipfs.js";
 import { writeEnrichmentRunRecord } from "./enrichment/record.js";
 
 function printUsage(): void {
@@ -12,12 +17,18 @@ function printUsage(): void {
   pnpm --filter @oracle/pipeline enrich build [--pilot|--full]
   pnpm --filter @oracle/pipeline enrich export
   pnpm --filter @oracle/pipeline enrich export-api
+  pnpm --filter @oracle/pipeline enrich export-public
+  pnpm --filter @oracle/pipeline enrich publish-ipfs
   pnpm --filter @oracle/pipeline enrich record [--pilot|--full]
   pnpm --filter @oracle/pipeline enrich run [--pilot|--full]
 
 Options:
   --pilot   Tag run-record as pilot (parcel subset comes from Phase 1 ingest)
-  --full    Tag run-record as full county run`);
+  --full    Tag run-record as full county run
+
+Notes:
+  export-public writes a PII-stripped Parquet for public IPFS (allowlist only).
+  publish-ipfs uploads eligible artifacts via Pinata (requires PINATA_JWT).`);
 }
 
 function parseMode(args: string[]): { pilot: boolean; full: boolean; mode: "pilot" | "full" } {
@@ -67,6 +78,18 @@ async function main(): Promise<void> {
         console.log(
           `enrich export-api complete: ${result.parquetPath} (${result.rowCount} rows, ${result.fileSizeBytes} bytes)`,
         );
+        break;
+      }
+      case "export-public": {
+        const result = await exportParcelsEnrichedPublic();
+        console.log(
+          `enrich export-public complete: ${result.parquetPath} (${result.rowCount} rows, ${result.fileSizeBytes} bytes)`,
+        );
+        break;
+      }
+      case "publish-ipfs": {
+        const result = await publishEligibleArtifactsToIpfs();
+        console.log(`enrich publish-ipfs complete: ${result.manifestPath}`);
         break;
       }
       case "record": {

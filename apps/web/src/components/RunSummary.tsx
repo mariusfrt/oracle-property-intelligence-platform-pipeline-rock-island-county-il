@@ -10,13 +10,15 @@ import {
   UtilityPole,
   Zap,
 } from "lucide-react";
-import type { LayerCount, SummaryResponse } from "@oracle/shared";
+import type { ArtifactsResponse, LayerCount, SummaryResponse } from "@oracle/shared";
+import { IpfsArtifactsSection } from "@/components/IpfsArtifactsSection";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Skeleton, StatCardSkeleton } from "@/components/ui/Skeleton";
 
 interface RunSummaryProps {
   summary: SummaryResponse | null;
+  artifacts?: ArtifactsResponse | null;
   loading?: boolean;
 }
 
@@ -82,7 +84,7 @@ function formatRetrieved(value: string | null): string | null {
   });
 }
 
-export function RunSummary({ summary, loading }: RunSummaryProps) {
+export function RunSummary({ summary, artifacts = null, loading }: RunSummaryProps) {
   if (loading) {
     return (
       <div className="space-y-8">
@@ -169,6 +171,8 @@ export function RunSummary({ summary, loading }: RunSummaryProps) {
       </section>
 
       <QuickLinks />
+
+      <IpfsArtifactsSection artifacts={artifacts} />
 
       {/* Provenance */}
       <section className="card overflow-hidden p-0">

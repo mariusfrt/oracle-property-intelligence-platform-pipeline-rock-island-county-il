@@ -52,6 +52,29 @@ export function getParquetPath(): string {
   return DEFAULT_LOCAL_PARQUET;
 }
 
+/** Default local IPFS manifest path (repo root data/). */
+export const DEFAULT_LOCAL_IPFS_MANIFEST = path.resolve(
+  __dirname,
+  "../../../../data/ipfs-manifest.json",
+);
+
+/**
+ * Resolve the IPFS manifest path for local and Lambda.
+ * Prefers IPFS_MANIFEST_PATH; falls back to the bundled Lambda asset or the repo default.
+ */
+export function getIpfsManifestPath(): string {
+  if (process.env.IPFS_MANIFEST_PATH) {
+    return path.resolve(process.env.IPFS_MANIFEST_PATH);
+  }
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join(
+      process.env.LAMBDA_TASK_ROOT ?? process.cwd(),
+      "ipfs-manifest.json",
+    );
+  }
+  return DEFAULT_LOCAL_IPFS_MANIFEST;
+}
+
 /** @deprecated Use getParquetPath() */
 export function getParquetSource(): string {
   return getParquetPath();

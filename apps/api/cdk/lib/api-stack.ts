@@ -4,30 +4,25 @@ import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export interface ApiStackProps extends cdk.StackProps {
-  /** S3 object key retained for the later IPFS/publish story (not used at query time). */
-  parquetObjectKey?: string;
-}
+export interface ApiStackProps extends cdk.StackProps {}
 
 /**
  * API Gateway HTTP API + Lambda (tRPC) querying a Parquet file bundled into the
  * function asset via native DuckDB (@duckdb/node-api). Region: us-east-2.
  *
- * Runtime does NOT depend on S3/httpfs — the private bucket is retained for
- * the later publish story only.
+ * Eligible non-PII artifacts may be published to IPFS separately; the full
+ * dataset (with owner PII) stays in the Lambda asset and access-gated API.
  *
  * NOT deployed by default — run `pnpm --filter @oracle/api cdk deploy` when ready.
  */
 export class ApiStack extends cdk.Stack {
   public readonly httpApi: apigwv2.HttpApi;
-  public readonly dataBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props: ApiStackProps = {}) {
     super(scope, id, {
@@ -36,19 +31,14 @@ export class ApiStack extends cdk.Stack {
       tags: { project_name: "oracle-rock-island" },
     });
 
-    const parquetObjectKey = props.parquetObjectKey ?? "parquet/parcels_enriched_api.parquet";
     const localParquetPath = path.resolve(
       __dirname,
       "../../../../data/parquet/parcels_enriched_api.parquet",
     );
-
-    this.dataBucket = new s3.Bucket(this, "ParquetDataBucket", {
-      bucketName: undefined,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      enforceSSL: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const localIpfsManifestPath = path.resolve(
+      __dirname,
+      "../../../../data/ipfs-manifest.json",
+    );
 
     const handler = new nodejs.NodejsFunction(this, "TrpcHandler", {
       entry: path.join(__dirname, "../../src/handler.ts"),
@@ -93,6 +83,8 @@ export class ApiStack extends cdk.Stack {
           afterBundling: (_inputDir: string, outputDir: string): string[] => [
             // Bundle the Parquet into the Lambda asset for read_parquet at runtime.
             `cp "${localParquetPath}" "${path.join(outputDir, "parcels_enriched_api.parquet")}"`,
+            // Optional IPFS manifest (may be absent until publish-ipfs has been run).
+            `if [ -f "${localIpfsManifestPath}" ]; then cp "${localIpfsManifestPath}" "${path.join(outputDir, "ipfs-manifest.json")}"; fi`,
             // Force-install the linux-x64 binding so Lambda has the right binary
             // even when synthesizing on macOS (--force bypasses npm's libc check).
             `npm install --prefix "${outputDir}" --no-save --no-audit --no-fund --force @duckdb/node-bindings-linux-x64@1.5.5-r.3`,
@@ -137,16 +129,6 @@ export class ApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, "ApiUrl", {
       value: this.httpApi.apiEndpoint,
       description: "API Gateway URL — set as NEXT_PUBLIC_API_URL for apps/web",
-    });
-
-    new cdk.CfnOutput(this, "ParquetBucketName", {
-      value: this.dataBucket.bucketName,
-      description: "Retained for later IPFS/publish — not used by the query runtime",
-    });
-
-    new cdk.CfnOutput(this, "ParquetS3Uri", {
-      value: `s3://${this.dataBucket.bucketName}/${parquetObjectKey}`,
-      description: "Optional archive location (runtime uses the bundled Parquet asset)",
     });
   }
 }

@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-08-03T16:01:00.684Z",
+  "gateway": "https://ipfs.io/ipfs/",
+  "note": "Eligible, non-personal artifacts only. Owner names, mailing addresses, tax-bill identity, and financial values are deliberately excluded from public IPFS and served only through the access-gated app.",
+  "artifacts": [
+    {
+      "name": "parcels_enriched_public.parquet",
+      "description": "Eligible, non-personal enriched parcel dataset for Rock Island County (PII and financial fields excluded).",
+      "cid": "bafybeicsu77e36efetn7ea6nrjwag2nli3rsidikmr55q47iqrizfpybde",
+      "bytes": 20289369,
+      "gatewayUrl": "https://ipfs.io/ipfs/bafybeicsu77e36efetn7ea6nrjwag2nli3rsidikmr55q47iqrizfpybde"
+    },
+    {
+      "name": "enrichment-run-record.json",
+      "description": "Enrichment run provenance record (layer counts, sources, timestamps).",
+      "cid": "bafkreigrcgnaop2auol27ebwgdthb2sc44ntkzhzgl53dace236ywbbote",
+      "bytes": 732,
+      "gatewayUrl": "https://ipfs.io/ipfs/bafkreigrcgnaop2auol27ebwgdthb2sc44ntkzhzgl53dace236ywbbote"
+    }
+  ]
+}

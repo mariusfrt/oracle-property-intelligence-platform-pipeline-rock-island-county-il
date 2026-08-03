@@ -74,7 +74,7 @@ export const parcelsRouter = router({
         },
       },
       infraNote:
-        "Results are computed on demand from a single data file bundled inside the serverless API. There is no always-on database, so it only runs, and only costs, when a query comes in.",
+        "Results are computed on demand from a single data file bundled inside the serverless API. There is no always-on database, so it only runs, and only costs, when a query comes in. Eligible, non-personal dataset artifacts are published to IPFS for decentralized storage and independent verification, while owner and financial data stay in the access-gated app.",
       limitations: [...GLOBAL_LIMITATIONS],
     };
   }),
