@@ -65,9 +65,9 @@ export const PRESET_LABELS: Record<PresetQueryKind, string> = {
 
 export const PRESET_LIMITATIONS: Partial<Record<PresetQueryKind, string>> = {
   roof_age_over_15y:
-    "roof_age_proxy_yrs is derived from year_built; permit-based roof age is preferred when available.",
+    "Roof age is estimated from the year the building was built. Permit records would give a more exact figure where they are available.",
   water_view:
-    "near_water is a proximity proxy (≤300 m), not line-of-sight water view.",
+    "This uses closeness to water (within about 300 meters) as a stand-in for a water view, not a confirmed line of sight.",
   no_recorded_sale_over_10y:
-    "stable_ownership with NULL last_sale means no recorded sale — not proof the parcel was never sold.",
+    "A missing sale date is treated as no recorded sale. It does not prove the parcel was never sold.",
 };

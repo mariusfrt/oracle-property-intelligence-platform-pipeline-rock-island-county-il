@@ -9,75 +9,70 @@ import {
   searchParcelsInputSchema,
   type DataCenterCandidatesInput,
   type PagedParcelsResponse,
-  type ParcelApiRow,
   type PresetQueryInput,
   type SearchParcelsInput,
   type SummaryResponse,
 } from "@oracle/shared";
 import { loggedProcedure, router } from "../trpc.js";
-import { PARCELS_API_TABLE, SEARCH_SELECT_COLUMNS } from "../db/duckdb.js";
+import {
+  DATA_CENTER_SELECT_COLUMNS,
+  escapeLikePattern,
+  paginationClause,
+  PARCELS_API_TABLE,
+  SEARCH_SELECT_COLUMNS,
+  type DuckDbClient,
+} from "../db/duckdb.js";
 
-function emptyPaged(page: number, pageSize: number): PagedParcelsResponse {
-  return { rows: [], total: 0, page, pageSize };
-}
-
-/** Stub summary — structure matches app-plan; counts from documented enrichment run. */
-function stubSummary(): SummaryResponse {
-  return {
-    layers: {
-      parcels: {
-        count: DOCUMENTED_LAYER_COUNTS.parcels,
-        sourceUrl: null,
-        retrievedAt: null,
-      },
-      transmission: {
-        count: DOCUMENTED_LAYER_COUNTS.transmission,
-        sourceUrl: null,
-        retrievedAt: null,
-      },
-      substations: {
-        count: DOCUMENTED_LAYER_COUNTS.substations,
-        sourceUrl: null,
-        retrievedAt: null,
-      },
-      transit: {
-        count: DOCUMENTED_LAYER_COUNTS.transit,
-        sourceUrl: null,
-        retrievedAt: null,
-      },
-      starbucks: {
-        count: DOCUMENTED_LAYER_COUNTS.starbucks,
-        sourceUrl: null,
-        retrievedAt: null,
-      },
-      water: {
-        count: DOCUMENTED_LAYER_COUNTS.water,
-        sourceUrl: null,
-        retrievedAt: null,
-      },
-    },
-    infraNote:
-      "Queried live via DuckDB in-memory over S3 Parquet (httpfs); no always-on hosted database.",
-    limitations: [...GLOBAL_LIMITATIONS],
-  };
-}
-
-/**
- * TODO: build WHERE clause from SearchParcelsFilters against plain columns on
- * `${PARCELS_API_TABLE}` — no spatial functions; geom_geojson returned as text.
- */
-export function buildSearchWhereClause(_filters: SearchParcelsInput): {
+export function buildSearchWhereClause(filters: SearchParcelsInput): {
   sql: string;
   params: unknown[];
 } {
-  return { sql: "1=1", params: [] };
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.minAcres != null) {
+    clauses.push("acreage >= ?");
+    params.push(filters.minAcres);
+  }
+  if (filters.maxAcres != null) {
+    clauses.push("acreage <= ?");
+    params.push(filters.maxAcres);
+  }
+  if (filters.industrial === true) {
+    clauses.push("is_industrial = true");
+  }
+  if (filters.ownerOutOfArea === true) {
+    clauses.push("owner_out_of_area = true");
+  }
+  if (filters.stableOwnership === true) {
+    clauses.push("stable_ownership = true");
+  }
+  if (filters.nearPower === true) {
+    clauses.push("near_power = true");
+  }
+  if (filters.nearWater === true) {
+    clauses.push("near_water = true");
+  }
+  if (filters.nearTransit === true) {
+    clauses.push("near_transit = true");
+  }
+  if (filters.nearStarbucks === true) {
+    clauses.push("near_starbucks = true");
+  }
+  if (filters.query) {
+    const pattern = `%${escapeLikePattern(filters.query)}%`;
+    clauses.push(
+      "(owner_name ILIKE ? ESCAPE '\\' OR site_address ILIKE ? ESCAPE '\\')",
+    );
+    params.push(pattern, pattern);
+  }
+
+  return {
+    sql: clauses.length > 0 ? clauses.join(" AND ") : "1=1",
+    params,
+  };
 }
 
-/**
- * TODO: live dc_candidate — ignore baked dc_candidate column; compute:
- * acreage >= minAcres AND is_industrial AND stable_ownership AND
- * least(dist_transmission_m, dist_substation_m) <= powerRadiusM
- */
 export function buildDataCenterWhereClause(input: DataCenterCandidatesInput): {
   sql: string;
   params: unknown[];
@@ -89,7 +84,6 @@ export function buildDataCenterWhereClause(input: DataCenterCandidatesInput): {
   };
 }
 
-/** TODO: map preset enum to WHERE on plain boolean/numeric columns. */
 export function buildPresetWhereClause(preset: PresetQueryInput["preset"]): string {
   switch (preset) {
     case "roof_age_over_15y":
@@ -97,7 +91,7 @@ export function buildPresetWhereClause(preset: PresetQueryInput["preset"]): stri
     case "water_view":
       return "near_water = true";
     case "no_recorded_sale_over_10y":
-      return "stable_ownership = true";
+      return "years_since_sale > 10";
     case "regional_owner":
       return "owner_out_of_area = true";
     case "near_transit":
@@ -109,52 +103,134 @@ export function buildPresetWhereClause(preset: PresetQueryInput["preset"]): stri
   }
 }
 
+async function queryPaged(
+  duckdb: DuckDbClient,
+  selectColumns: readonly string[],
+  whereSql: string,
+  whereParams: unknown[],
+  page: number,
+  pageSize: number,
+  orderBy: string,
+): Promise<PagedParcelsResponse> {
+  const table = PARCELS_API_TABLE;
+  const total = await duckdb.count(
+    `SELECT COUNT(*)::BIGINT AS count FROM ${table} WHERE ${whereSql}`,
+    whereParams,
+  );
+
+  const { sql: limitSql, params: limitParams } = paginationClause(page, pageSize);
+  const rows = await duckdb.query<Record<string, unknown>>(
+    `SELECT ${selectColumns.join(", ")} FROM ${table} WHERE ${whereSql} ORDER BY ${orderBy} ${limitSql}`,
+    [...whereParams, ...limitParams],
+  );
+
+  return { rows, total, page, pageSize };
+}
+
 export const parcelsRouter = router({
-  /** Demo pipeline run summary — record counts by source + timestamps. */
-  summary: loggedProcedure.query(async (): Promise<SummaryResponse> => {
-    // TODO: read live counts/timestamps from enrichment-run-record or DuckDB metadata
-    return stubSummary();
+  summary: loggedProcedure.query(async ({ ctx }): Promise<SummaryResponse> => {
+    const table = PARCELS_API_TABLE;
+    const parcelCount = await ctx.duckdb.count(
+      `SELECT COUNT(*)::BIGINT AS count FROM ${table}`,
+    );
+
+    const [provenance] = await ctx.duckdb.query<{
+      source_url: string | null;
+      retrieved_at: string | null;
+    }>(
+      `SELECT ANY_VALUE(source_url) AS source_url, CAST(MAX(retrieved_at) AS VARCHAR) AS retrieved_at FROM ${table}`,
+    );
+
+    return {
+      layers: {
+        parcels: {
+          count: parcelCount,
+          sourceUrl: provenance?.source_url ?? null,
+          retrievedAt: provenance?.retrieved_at ?? null,
+        },
+        transmission: {
+          count: DOCUMENTED_LAYER_COUNTS.transmission,
+          sourceUrl: null,
+          retrievedAt: null,
+        },
+        substations: {
+          count: DOCUMENTED_LAYER_COUNTS.substations,
+          sourceUrl: null,
+          retrievedAt: null,
+        },
+        transit: {
+          count: DOCUMENTED_LAYER_COUNTS.transit,
+          sourceUrl: null,
+          retrievedAt: null,
+        },
+        starbucks: {
+          count: DOCUMENTED_LAYER_COUNTS.starbucks,
+          sourceUrl: null,
+          retrievedAt: null,
+        },
+        water: {
+          count: DOCUMENTED_LAYER_COUNTS.water,
+          sourceUrl: null,
+          retrievedAt: null,
+        },
+      },
+      infraNote:
+        "Queried live via DuckDB in-memory over S3 Parquet (httpfs); no always-on hosted database.",
+      limitations: [...GLOBAL_LIMITATIONS],
+    };
   }),
 
-  /** Filtered parcel search with paged geom_geojson for map/table. */
   searchParcels: loggedProcedure
     .input(searchParcelsInputSchema)
-    .query(async ({ input }): Promise<PagedParcelsResponse> => {
-      const _where = buildSearchWhereClause(input);
-      const _select = SEARCH_SELECT_COLUMNS.join(", ");
-      void _where;
-      void _select;
-      void PARCELS_API_TABLE;
-      // TODO: SELECT ... FROM read_parquet(...) WHERE ... LIMIT/OFFSET
-      return emptyPaged(input.page, input.pageSize);
+    .query(async ({ ctx, input }): Promise<PagedParcelsResponse> => {
+      const where = buildSearchWhereClause(input);
+      return queryPaged(
+        ctx.duckdb,
+        SEARCH_SELECT_COLUMNS,
+        where.sql,
+        where.params,
+        input.page,
+        input.pageSize,
+        "objectid",
+      );
     }),
 
-  /** Single parcel detail with all attributes, distances, provenance, geojson. */
-  parcel: loggedProcedure.input(parcelIdSchema).query(async ({ input }) => {
-    void input;
-    // TODO: SELECT * FROM parcels_enriched_api WHERE objectid = ?
-    return { parcel: null as ParcelApiRow | null };
+  parcel: loggedProcedure.input(parcelIdSchema).query(async ({ ctx, input }) => {
+    const rows = await ctx.duckdb.query<Record<string, unknown>>(
+      `SELECT * FROM ${PARCELS_API_TABLE} WHERE objectid = ?`,
+      [input.objectid],
+    );
+    return { parcel: rows[0] ?? null };
   }),
 
-  /**
-   * Data-center candidates — configurable minAcres / powerRadiusM;
-   * ignores baked dc_candidate; ranked by acreage DESC.
-   */
   dataCenterCandidates: loggedProcedure
     .input(dataCenterCandidatesInputSchema)
-    .query(async ({ input }): Promise<PagedParcelsResponse> => {
-      const _where = buildDataCenterWhereClause(input);
-      void _where;
-      // TODO: ORDER BY acreage DESC
-      return emptyPaged(input.page, input.pageSize);
+    .query(async ({ ctx, input }): Promise<PagedParcelsResponse> => {
+      const where = buildDataCenterWhereClause(input);
+      return queryPaged(
+        ctx.duckdb,
+        DATA_CENTER_SELECT_COLUMNS,
+        where.sql,
+        where.params,
+        input.page,
+        input.pageSize,
+        "acreage DESC NULLS LAST, objectid",
+      );
     }),
 
-  /** One of the six generic question presets. */
-  presetQuery: loggedProcedure.input(presetQueryInputSchema).query(async ({ input }) => {
-    const _where = buildPresetWhereClause(input.preset);
-    void _where;
+  presetQuery: loggedProcedure.input(presetQueryInputSchema).query(async ({ ctx, input }) => {
+    const whereSql = buildPresetWhereClause(input.preset);
+    const paged = await queryPaged(
+      ctx.duckdb,
+      SEARCH_SELECT_COLUMNS,
+      whereSql,
+      [],
+      input.page,
+      input.pageSize,
+      "objectid",
+    );
     return {
-      ...emptyPaged(input.page, input.pageSize),
+      ...paged,
       preset: input.preset,
       label: PRESET_LABELS[input.preset],
       limitation: PRESET_LIMITATIONS[input.preset],

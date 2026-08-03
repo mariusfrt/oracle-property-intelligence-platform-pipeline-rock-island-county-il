@@ -26,7 +26,7 @@ export const WGS84_SRID = "EPSG:4326";
 export const TRANSIT_WALK_THRESHOLD_M = 800;
 export const STARBUCKS_WALK_THRESHOLD_M = 800;
 
-/** Proximity proxy for water view — not line-of-sight. */
+/** Proximity proxy for water view, not line-of-sight. */
 export const WATER_PROXIMITY_THRESHOLD_M = 300;
 
 /** Default ~1 mi radius for near_power / dc_candidate. */
@@ -36,8 +36,8 @@ export const DEFAULT_POWER_RADIUS_M = 1609;
 export const DEFAULT_MIN_ACRES = 5;
 
 export const ENRICHMENT_LIMITATIONS = [
-  "roof_age_proxy_yrs is a proxy based on year_built; permit-based roof age is preferred when available.",
-  "stable_ownership treats NULL last_sale as no recorded sale — not proof the parcel was never sold.",
+  "Roof age is estimated from the year each building was built, so it is an approximation. Permit records would give a more exact figure where they are available.",
+  "When a parcel has no sale on record, it is treated as long held. A missing sale date does not prove the parcel was never sold.",
 ] as const;
 
 export const RAW_ENRICHMENT_FILES = {

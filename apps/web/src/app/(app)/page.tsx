@@ -3,7 +3,7 @@ import { createApiClient } from "@/lib/trpc";
 
 export const dynamic = "force-dynamic";
 
-/** Home — pipeline run summary (demo screen 1). */
+/** Home: live pipeline run summary. */
 export default async function HomePage() {
   let summary = null;
 
@@ -14,5 +14,9 @@ export default async function HomePage() {
     summary = null;
   }
 
-  return <RunSummary summary={summary} />;
+  return (
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
+      <RunSummary summary={summary} />
+    </div>
+  );
 }

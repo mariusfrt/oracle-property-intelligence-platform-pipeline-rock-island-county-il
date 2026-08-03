@@ -1,13 +1,8 @@
 import { createTRPCClient, httpBatchLink, type TRPCClient } from "@trpc/client";
 import type { AppRouter } from "@oracle/api/router";
+import { getApiUrl } from "./trpc-react";
 
-function getApiUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url) {
-    return "http://localhost:3001";
-  }
-  return url.replace(/\/$/, "");
-}
+export { getApiUrl };
 
 export function createApiClient(): TRPCClient<AppRouter> {
   return createTRPCClient<AppRouter>({

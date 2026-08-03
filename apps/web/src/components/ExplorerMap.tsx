@@ -17,11 +17,19 @@ interface ExplorerMapProps {
   parcels: MapParcelFeature[];
   selectedObjectId?: number | null;
   onSelect?: (objectid: number) => void;
+  className?: string;
 }
 
-export function ExplorerMap({ parcels, selectedObjectId, onSelect }: ExplorerMapProps) {
+export function ExplorerMap({
+  parcels,
+  selectedObjectId,
+  onSelect,
+  className = "",
+}: ExplorerMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -53,7 +61,13 @@ export function ExplorerMap({ parcels, selectedObjectId, onSelect }: ExplorerMap
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     mapRef.current = map;
 
+    const ro = new ResizeObserver(() => {
+      map.resize();
+    });
+    ro.observe(containerRef.current);
+
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
     };
@@ -97,21 +111,22 @@ export function ExplorerMap({ parcels, selectedObjectId, onSelect }: ExplorerMap
           type: "fill",
           source: sourceId,
           paint: {
-            "fill-color": "#2563eb",
+            "fill-color": "#4f46e5",
             "fill-opacity": 0.35,
-            "fill-outline-color": "#1d4ed8",
+            "fill-outline-color": "#4338ca",
           },
         });
         map.on("click", layerId, (e) => {
-          const id = e.features?.[0]?.properties?.objectid;
-          if (typeof id === "number" && onSelect) onSelect(id);
+          const raw = e.features?.[0]?.properties?.objectid;
+          const id = typeof raw === "number" ? raw : Number(raw);
+          if (Number.isFinite(id) && onSelectRef.current) onSelectRef.current(id);
         });
       }
     };
 
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
-  }, [parcels, onSelect]);
+  }, [parcels]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -131,7 +146,7 @@ export function ExplorerMap({ parcels, selectedObjectId, onSelect }: ExplorerMap
   return (
     <div
       ref={containerRef}
-      style={{ width: "100%", height: "100%", minHeight: 420, borderRadius: 8 }}
+      className={`h-full w-full rounded-xl ${className}`}
       aria-label="Parcel map"
     />
   );

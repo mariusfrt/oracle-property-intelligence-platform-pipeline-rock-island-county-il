@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { buildParcelsEnriched } from "./enrichment/build.js";
-import { exportParcelsEnriched } from "./enrichment/export-enriched.js";
+import { exportParcelsEnriched, exportParcelsEnrichedApi } from "./enrichment/export-enriched.js";
 import { fetchEnrichmentLayers } from "./enrichment/fetch.js";
 import { loadEnrichmentLayers } from "./enrichment/load.js";
 import { writeEnrichmentRunRecord } from "./enrichment/record.js";
@@ -11,6 +11,7 @@ function printUsage(): void {
   pnpm --filter @oracle/pipeline enrich load
   pnpm --filter @oracle/pipeline enrich build [--pilot|--full]
   pnpm --filter @oracle/pipeline enrich export
+  pnpm --filter @oracle/pipeline enrich export-api
   pnpm --filter @oracle/pipeline enrich record [--pilot|--full]
   pnpm --filter @oracle/pipeline enrich run [--pilot|--full]
 
@@ -61,6 +62,13 @@ async function main(): Promise<void> {
         console.log(`enrich export complete: ${result.parquetPath} (${result.rowCount} rows)`);
         break;
       }
+      case "export-api": {
+        const result = await exportParcelsEnrichedApi();
+        console.log(
+          `enrich export-api complete: ${result.parquetPath} (${result.rowCount} rows, ${result.fileSizeBytes} bytes)`,
+        );
+        break;
+      }
       case "record": {
         const { recordPath } = await writeEnrichmentRunRecord({ mode });
         console.log(`enrich record complete: ${recordPath}`);
@@ -71,6 +79,7 @@ async function main(): Promise<void> {
         const loadResult = await loadEnrichmentLayers();
         const buildResult = await buildParcelsEnriched();
         const exportResult = await exportParcelsEnriched();
+        const exportApiResult = await exportParcelsEnrichedApi();
         const { recordPath } = await writeEnrichmentRunRecord({
           mode,
           fetchLayers: fetchResult.layers,
@@ -81,8 +90,9 @@ async function main(): Promise<void> {
           `  load:   ${loadResult.powerLines} lines, ${loadResult.powerSubstations} substations`,
         );
         console.log(`  build:  ${buildResult.rowCount} enriched row(s)`);
-        console.log(`  export: ${exportResult.parquetPath}`);
-        console.log(`  record: ${recordPath}`);
+        console.log(`  export:     ${exportResult.parquetPath}`);
+        console.log(`  export-api: ${exportApiResult.parquetPath} (${exportApiResult.fileSizeBytes} bytes)`);
+        console.log(`  record:     ${recordPath}`);
         break;
       }
       default:

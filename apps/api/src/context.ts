@@ -1,5 +1,5 @@
 import type { DuckDbClient } from "./db/duckdb.js";
-import { createDuckDbClient, getParquetS3Uri } from "./db/duckdb.js";
+import { createDuckDbClient, getParquetSource } from "./db/duckdb.js";
 import type { Logger } from "@aws-lambda-powertools/logger";
 
 export interface ApiContext {
@@ -12,8 +12,8 @@ let cachedClient: DuckDbClient | null = null;
 export function createApiContext(logger: Logger): ApiContext {
   if (!cachedClient) {
     cachedClient = createDuckDbClient({
-      parquetS3Uri: getParquetS3Uri(),
-      s3Region: process.env.AWS_REGION ?? "us-east-2",
+      parquetSource: getParquetSource(),
+      s3Region: process.env.S3_REGION ?? "us-east-2",
     });
   }
   return { logger, duckdb: cachedClient };

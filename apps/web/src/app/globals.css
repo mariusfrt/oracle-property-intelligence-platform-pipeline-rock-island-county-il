@@ -1,43 +1,35 @@
-* {
-  box-sizing: border-box;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
 }
 
-body {
-  margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-  color: #111827;
-  background: #f9fafb;
-}
+@layer components {
+  .label-caps {
+    @apply text-xs font-medium uppercase tracking-wider text-slate-500;
+  }
 
-a {
-  color: #2563eb;
-  text-decoration: none;
-}
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2;
+  }
 
-a:hover {
-  text-decoration: underline;
-}
+  .input-base {
+    @apply mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus-ring;
+  }
 
-table th,
-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-}
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 focus-ring;
+  }
 
-input[type="number"],
-input[type="search"],
-input[type="password"] {
-  display: block;
-  width: 100%;
-  margin-top: 4px;
-  padding: 8px;
-}
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 focus-ring;
+  }
 
-button {
-  cursor: pointer;
-  padding: 8px 12px;
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-card;
+  }
 }

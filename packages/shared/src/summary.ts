@@ -57,6 +57,6 @@ export const DOCUMENTED_LAYER_COUNTS = {
 } as const;
 
 export const GLOBAL_LIMITATIONS = [
-  "roof_age_proxy_yrs is a proxy based on year_built; permit-based roof age is preferred when available.",
-  "stable_ownership treats NULL last_sale as no recorded sale — not proof the parcel was never sold.",
+  "Roof age is estimated from the year each building was built, so it is an approximation. Permit records would give a more exact figure where they are available.",
+  "When a parcel has no sale on record, it is treated as long held. A missing sale date does not prove the parcel was never sold.",
 ] as const;
