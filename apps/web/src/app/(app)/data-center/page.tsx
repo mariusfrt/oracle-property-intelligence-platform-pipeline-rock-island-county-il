@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ExplorerMap } from "@/components/ExplorerMap";
 import { ResultsTable } from "@/components/ResultsTable";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Badge } from "@/components/ui/Badge";
 import { mapParcelRows } from "@/lib/parcel-rows";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { trpc } from "@/lib/trpc-react";
 
 const PAGE_SIZE = 50;
@@ -23,44 +24,74 @@ function sliderFill(value: number, min: number, max: number): { backgroundImage:
   };
 }
 
-/** Data-center candidates, ranked list + map with live sliders. */
+/** Data-center candidates: a ranked, threshold-tuned finder over the shared query layer. */
 export default function DataCenterPage() {
   const [minAcres, setMinAcres] = useState(20);
   const [powerRadiusM, setPowerRadiusM] = useState(1609);
   const [page, setPage] = useState(1);
-  const [enabled, setEnabled] = useState(false);
   const [mobileView, setMobileView] = useState<MobileView>("list");
 
-  const candidatesQuery = trpc.parcels.dataCenterCandidates.useQuery(
-    { minAcres, powerRadiusM, page, pageSize: PAGE_SIZE },
-    { enabled },
+  // Loads on mount with the default thresholds. Debounced so dragging a slider
+  // does not fire a request on every step; the query re-runs once you settle.
+  const queryInput = useMemo(
+    () => ({ minAcres, powerRadiusM, page, pageSize: PAGE_SIZE }),
+    [minAcres, powerRadiusM, page],
   );
+  const debouncedInput = useDebouncedValue(queryInput, 350);
+  const candidatesQuery = trpc.parcels.dataCenterCandidates.useQuery(debouncedInput, {
+    enabled: true,
+  });
 
-  const rows = mapParcelRows((candidatesQuery.data?.rows ?? []) as Record<string, unknown>[]);
+  const rows = useMemo(
+    () => mapParcelRows((candidatesQuery.data?.rows ?? []) as Record<string, unknown>[]),
+    [candidatesQuery.data],
+  );
   const total = candidatesQuery.data?.total ?? 0;
 
-  function handleRefresh() {
-    setPage(1);
-    setEnabled(true);
-    void candidatesQuery.refetch();
-  }
+  const emptyMessage = candidatesQuery.isError
+    ? "Unable to load candidates right now. Please try again."
+    : "No parcels match the current acreage and power-radius thresholds.";
 
-  const emptyMessage = !enabled
-    ? "Adjust sliders and click Refresh to load candidates."
-    : candidatesQuery.isError
-      ? "Unable to load candidates right now. Please try again."
-      : "No parcels match the current acreage and power-radius thresholds.";
+  const mapParcels = useMemo(
+    () =>
+      rows.map((r) => ({
+        objectid: r.objectid,
+        geom_geojson: r.geom_geojson ?? null,
+        label: r.pin ?? String(r.objectid),
+      })),
+    [rows],
+  );
 
-  const mapParcels = rows.map((r) => ({
-    objectid: r.objectid,
-    geom_geojson: r.geom_geojson ?? null,
-    label: r.pin ?? String(r.objectid),
-  }));
+  const criteria = [
+    `Above ${minAcres} acres`,
+    "Industrial zoning",
+    "Stable ownership",
+    `Within ${powerRadiusM.toLocaleString()} m of power`,
+  ];
 
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col overflow-hidden px-3 py-3 sm:px-4 lg:px-6">
-      {/* Control bar, full width, wraps on narrow screens */}
+      {/* Control bar */}
       <div className="card mb-3 flex shrink-0 flex-wrap items-end gap-4 p-4 sm:gap-6">
+        {/* Identity: this is the ranked, opinionated candidate finder */}
+        <div className="w-full">
+          <h1 className="text-base font-semibold text-slate-900">Data-center candidates</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Parcels ranked by distance to power, matching a fixed suitability profile. Tune the
+            acreage threshold and power radius to refine the ranking.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {criteria.map((c) => (
+              <span
+                key={c}
+                className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700"
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        </div>
+
         <div className="min-w-[10rem] flex-1 basis-[12rem]">
           <div className="mb-2 flex items-center justify-between gap-2">
             <label htmlFor="min-acres-slider" className="label-caps">
@@ -75,7 +106,10 @@ export default function DataCenterPage() {
             max={100}
             step={1}
             value={minAcres}
-            onChange={(e) => setMinAcres(Number(e.target.value))}
+            onChange={(e) => {
+              setMinAcres(Number(e.target.value));
+              setPage(1);
+            }}
             style={sliderFill(minAcres, 5, 100)}
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-indigo-600 focus-ring"
           />
@@ -95,26 +129,20 @@ export default function DataCenterPage() {
             max={5000}
             step={100}
             value={powerRadiusM}
-            onChange={(e) => setPowerRadiusM(Number(e.target.value))}
+            onChange={(e) => {
+              setPowerRadiusM(Number(e.target.value));
+              setPage(1);
+            }}
             style={sliderFill(powerRadiusM, 500, 5000)}
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-indigo-600 focus-ring"
           />
         </div>
 
         <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
-          <ViewToggle
-            value={mobileView}
-            onChange={setMobileView}
-            className="lg:hidden"
-          />
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={candidatesQuery.isFetching}
-            className="btn-primary shrink-0"
-          >
-            {candidatesQuery.isFetching ? "Loading…" : "Refresh"}
-          </button>
+          <ViewToggle value={mobileView} onChange={setMobileView} className="lg:hidden" />
+          {candidatesQuery.isFetching ? (
+            <span className="text-xs text-slate-500">Updating…</span>
+          ) : null}
         </div>
       </div>
 
@@ -129,10 +157,10 @@ export default function DataCenterPage() {
             rows={rows}
             showDistToPower
             showRank
-            loading={enabled && candidatesQuery.isFetching}
-            isError={enabled && candidatesQuery.isError}
+            loading={candidatesQuery.isFetching}
+            isError={candidatesQuery.isError}
             emptyMessage={emptyMessage}
-            total={enabled ? total : undefined}
+            total={total}
             page={page}
             pageSize={PAGE_SIZE}
             onPageChange={setPage}

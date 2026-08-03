@@ -1,25 +1,23 @@
-/** Rock Island County + Quad Cities surroundings (EPSG:4326). */
-export const ARCGIS_BBOX = {
-  xmin: -91.0,
-  ymin: 41.2,
-  xmax: -89.7,
-  ymax: 42.0,
-} as const;
+import { COUNTY } from "../county.js";
 
-/** Overpass bbox: south, west, north, east. */
+/** County bounding box (EPSG:4326), from the active county config. */
+export const ARCGIS_BBOX = COUNTY.bbox;
+
+/** Overpass bbox (south, west, north, east), derived from the county bbox. */
 export const OVERPASS_BBOX = {
-  south: 41.2,
-  west: -91.0,
-  north: 42.0,
-  east: -89.7,
+  south: COUNTY.bbox.ymin,
+  west: COUNTY.bbox.xmin,
+  north: COUNTY.bbox.ymax,
+  east: COUNTY.bbox.xmax,
 } as const;
 
+// HIFLD transmission lines is a national dataset, filtered by the county bbox.
 export const HIFLD_TRANSMISSION_URL =
   "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/US_Electric_Power_Transmission_Lines/FeatureServer/0";
 
 export const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 
-export const UTM_SRID = "EPSG:32615";
+export const UTM_SRID = COUNTY.utmSrid;
 export const WGS84_SRID = "EPSG:4326";
 
 /** ~0.5 mi walkshed for transit and Starbucks. */

@@ -1,22 +1,21 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { COUNTY } from "./county.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** Repository root (parent of pipeline/). */
 export const REPO_ROOT = path.resolve(__dirname, "../..");
 
-export const SOURCE_SYSTEM = "RICO_GIS_Parcels_FeatureServer_0";
+export const SOURCE_SYSTEM = COUNTY.sourceSystem;
 
-export const FEATURE_SERVER_URL =
-  "https://services9.arcgis.com/6FnscPPlUa9DXXOk/arcgis/rest/services/Parcels/FeatureServer/0";
+export const FEATURE_SERVER_URL = COUNTY.parcelFeatureServerUrl;
 
-export const COUNTY_MIRROR_URL =
-  "https://gis.rockislandcountyil.gov/arcgis/rest/services/Hosted/Parcels/FeatureServer/0";
+export const COUNTY_MIRROR_URL = COUNTY.parcelMirrorUrl;
 
 export const PAGE_SIZE = 2000;
 export const PILOT_PAGE_SIZE = 200;
-export const FULL_PARCEL_COUNT = 65_956;
+export const FULL_PARCEL_COUNT = COUNTY.parcelCount;
 
 export const PATHS = {
   rawParcels: path.join(REPO_ROOT, "data/raw/parcels"),
