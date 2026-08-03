@@ -149,7 +149,10 @@ export async function searchParcels(
     where.params,
     parsed.page,
     parsed.pageSize,
-    "objectid",
+    // Order by a hash, not objectid: objectids cluster by township, so paging or
+    // capping by objectid shows one corner of the county. A hash spreads the
+    // result set (and the mapped subset) representatively across the county.
+    "hash(objectid), objectid",
   );
 }
 
@@ -195,7 +198,7 @@ export async function presetQuery(
     [],
     parsed.page,
     parsed.pageSize,
-    "objectid",
+    "hash(objectid), objectid",
   );
   return {
     ...paged,

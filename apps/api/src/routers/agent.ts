@@ -1,4 +1,5 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
 import {
@@ -234,6 +235,9 @@ function accumulateParcels(
 function createBedrockProvider() {
   return createAmazonBedrock({
     region: process.env.AWS_REGION ?? process.env.BEDROCK_REGION ?? "us-east-2",
+    // Resolve credentials from the full AWS chain (env vars on Lambda, or SSO /
+    // shared profile / role locally) so the agent works without exporting keys.
+    credentialProvider: fromNodeProviderChain(),
   });
 }
 
