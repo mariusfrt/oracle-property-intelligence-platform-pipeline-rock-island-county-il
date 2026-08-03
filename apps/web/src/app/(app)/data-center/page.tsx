@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ExplorerMap } from "@/components/ExplorerMap";
+import { ParcelDrawer, type ParcelDetail } from "@/components/ParcelDrawer";
 import { ResultsTable } from "@/components/ResultsTable";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Badge } from "@/components/ui/Badge";
@@ -30,6 +31,8 @@ export default function DataCenterPage() {
   const [powerRadiusM, setPowerRadiusM] = useState(1609);
   const [page, setPage] = useState(1);
   const [mobileView, setMobileView] = useState<MobileView>("list");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Loads on mount with the default thresholds. Debounced so dragging a slider
   // does not fire a request on every step; the query re-runs once you settle.
@@ -47,6 +50,19 @@ export default function DataCenterPage() {
     [candidatesQuery.data],
   );
   const total = candidatesQuery.data?.total ?? 0;
+
+  const parcelDetailQuery = trpc.parcels.parcel.useQuery(
+    { objectid: selectedId ?? 0 },
+    { enabled: drawerOpen && selectedId != null },
+  );
+  const parcelDetail: ParcelDetail | null = parcelDetailQuery.data?.parcel
+    ? (parcelDetailQuery.data.parcel as ParcelDetail)
+    : null;
+
+  const handleSelect = useCallback((objectid: number) => {
+    setSelectedId(objectid);
+    setDrawerOpen(true);
+  }, []);
 
   const emptyMessage = candidatesQuery.isError
     ? "Unable to load candidates right now. Please try again."
@@ -155,6 +171,8 @@ export default function DataCenterPage() {
         >
           <ResultsTable
             rows={rows}
+            selectedObjectId={selectedId}
+            onSelect={handleSelect}
             showDistToPower
             showRank
             loading={candidatesQuery.isFetching}
@@ -174,10 +192,26 @@ export default function DataCenterPage() {
           } lg:static lg:visible lg:pointer-events-auto lg:z-auto lg:flex lg:flex-col`}
         >
           <div className="card h-full min-h-0 overflow-hidden p-1.5">
-            <ExplorerMap parcels={mapParcels} className="border-0 shadow-none" />
+            <ExplorerMap
+              parcels={mapParcels}
+              selectedObjectId={selectedId}
+              onSelect={handleSelect}
+              className="border-0 shadow-none"
+            />
           </div>
         </div>
       </div>
+
+      <ParcelDrawer
+        open={drawerOpen}
+        parcel={parcelDetail}
+        loading={parcelDetailQuery.isFetching}
+        error={parcelDetailQuery.isError}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedId(null);
+        }}
+      />
     </div>
   );
 }
