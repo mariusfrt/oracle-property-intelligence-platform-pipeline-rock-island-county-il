@@ -13,7 +13,7 @@ export function createApiClient(): TRPCClient<AppRouter> {
   return createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
-        url: `${getApiUrl()}/trpc`,
+        url: getApiUrl(),
       }),
     ],
   });
