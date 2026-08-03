@@ -1,5 +1,7 @@
 import {
   DOCUMENTED_LAYER_COUNTS,
+  DOCUMENTED_LAYER_SOURCES,
+  ENRICHMENT_RETRIEVED_AT,
   GLOBAL_LIMITATIONS,
   type SummaryResponse,
 } from "@oracle/shared";
@@ -29,28 +31,28 @@ export async function getDatasetSummary(duckdb: DuckDbClient): Promise<SummaryRe
       },
       transmission: {
         count: DOCUMENTED_LAYER_COUNTS.transmission,
-        sourceUrl: null,
-        retrievedAt: null,
+        sourceUrl: DOCUMENTED_LAYER_SOURCES.transmission,
+        retrievedAt: ENRICHMENT_RETRIEVED_AT,
       },
       substations: {
         count: DOCUMENTED_LAYER_COUNTS.substations,
-        sourceUrl: null,
-        retrievedAt: null,
+        sourceUrl: DOCUMENTED_LAYER_SOURCES.substations,
+        retrievedAt: ENRICHMENT_RETRIEVED_AT,
       },
       transit: {
         count: DOCUMENTED_LAYER_COUNTS.transit,
-        sourceUrl: null,
-        retrievedAt: null,
+        sourceUrl: DOCUMENTED_LAYER_SOURCES.transit,
+        retrievedAt: ENRICHMENT_RETRIEVED_AT,
       },
       starbucks: {
         count: DOCUMENTED_LAYER_COUNTS.starbucks,
-        sourceUrl: null,
-        retrievedAt: null,
+        sourceUrl: DOCUMENTED_LAYER_SOURCES.starbucks,
+        retrievedAt: ENRICHMENT_RETRIEVED_AT,
       },
       water: {
         count: DOCUMENTED_LAYER_COUNTS.water,
-        sourceUrl: null,
-        retrievedAt: null,
+        sourceUrl: DOCUMENTED_LAYER_SOURCES.water,
+        retrievedAt: ENRICHMENT_RETRIEVED_AT,
       },
     },
     infraNote:

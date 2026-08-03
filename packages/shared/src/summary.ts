@@ -46,7 +46,7 @@ export const presetQueryResponseSchema = pagedParcelsResponseSchema.extend({
 
 export type PresetQueryResponse = z.infer<typeof presetQueryResponseSchema>;
 
-/** Documented expected layer counts (from enrichment run-record). Used by summary stub. */
+/** Documented layer counts (from the enrichment run record). */
 export const DOCUMENTED_LAYER_COUNTS = {
   parcels: 65_956,
   transmission: 157,
@@ -55,6 +55,19 @@ export const DOCUMENTED_LAYER_COUNTS = {
   starbucks: 5,
   water: 3_970,
 } as const;
+
+/** Source URLs for the enrichment layers (transmission from HIFLD, the rest from OSM via Overpass). */
+export const DOCUMENTED_LAYER_SOURCES: Record<string, string> = {
+  transmission:
+    "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/US_Electric_Power_Transmission_Lines/FeatureServer/0",
+  substations: "https://overpass-api.de/api/interpreter",
+  transit: "https://overpass-api.de/api/interpreter",
+  starbucks: "https://overpass-api.de/api/interpreter",
+  water: "https://overpass-api.de/api/interpreter",
+};
+
+/** When the enrichment layers were fetched (enrichment run completed_at). */
+export const ENRICHMENT_RETRIEVED_AT = "2026-08-01T15:47:35.717Z";
 
 export const GLOBAL_LIMITATIONS = [
   "Roof age is estimated from the year each building was built, so it is an approximation. Permit records would give a more exact figure where they are available.",
