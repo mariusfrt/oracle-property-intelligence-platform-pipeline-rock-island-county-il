@@ -1,0 +1,36 @@
+{
+  "version": "54.0.0",
+  "files": {
+    "04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1": {
+      "displayName": "TrpcHandler/Code",
+      "source": {
+        "path": "asset.04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "680482610668-us-east-2-0eef1893": {
+          "bucketName": "cdk-hnb659fds-assets-680482610668-us-east-2",
+          "objectKey": "04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1.zip",
+          "region": "us-east-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::680482610668:role/cdk-hnb659fds-file-publishing-role-680482610668-us-east-2"
+        }
+      }
+    },
+    "d5421e3e002161d92e2c48518a566d0ec158a7cda75080ef8f502e51ca322566": {
+      "displayName": "OracleRockIslandApiStack Template",
+      "source": {
+        "path": "OracleRockIslandApiStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "680482610668-us-east-2-02e2f39a": {
+          "bucketName": "cdk-hnb659fds-assets-680482610668-us-east-2",
+          "objectKey": "d5421e3e002161d92e2c48518a566d0ec158a7cda75080ef8f502e51ca322566.json",
+          "region": "us-east-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::680482610668:role/cdk-hnb659fds-file-publishing-role-680482610668-us-east-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

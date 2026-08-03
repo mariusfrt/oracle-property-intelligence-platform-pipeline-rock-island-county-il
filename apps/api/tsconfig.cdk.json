@@ -1,0 +1,8 @@
+{
+  "extends": "@oracle/tsconfig/node.json",
+  "compilerOptions": {
+    "outDir": "dist-cdk",
+    "rootDir": "."
+  },
+  "include": ["cdk/**/*.ts"]
+}

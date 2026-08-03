@@ -1,0 +1,435 @@
+{
+ "Description": "Rock Island County Oracle property intelligence tRPC API",
+ "Resources": {
+  "ParquetDataBucket63F3F6DB": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/ParquetDataBucket/Resource"
+   }
+  },
+  "ParquetDataBucketPolicy8019869B": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "ParquetDataBucket63F3F6DB"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:*",
+       "Condition": {
+        "Bool": {
+         "aws:SecureTransport": "false"
+        }
+       },
+       "Effect": "Deny",
+       "Principal": {
+        "AWS": "*"
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ParquetDataBucket63F3F6DB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ParquetDataBucket63F3F6DB",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/ParquetDataBucket/Policy/Resource"
+   }
+  },
+  "TrpcHandlerServiceRoleD16CD14E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/TrpcHandler/ServiceRole/Resource"
+   }
+  },
+  "TrpcHandlerServiceRoleDefaultPolicy02D349B8": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ParquetDataBucket63F3F6DB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ParquetDataBucket63F3F6DB",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ParquetDataBucket63F3F6DB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ParquetDataBucket63F3F6DB",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "TrpcHandlerServiceRoleDefaultPolicy02D349B8",
+    "Roles": [
+     {
+      "Ref": "TrpcHandlerServiceRoleD16CD14E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/TrpcHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "TrpcHandler23206048": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-680482610668-us-east-2",
+     "S3Key": "04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "NODE_OPTIONS": "--enable-source-maps",
+      "POWERTOOLS_SERVICE_NAME": "oracle-rock-island-api",
+      "POWERTOOLS_METRICS_NAMESPACE": "OracleRockIsland",
+      "PARQUET_S3_URI": {
+       "Fn::Join": [
+        "",
+        [
+         "s3://",
+         {
+          "Ref": "ParquetDataBucket63F3F6DB"
+         },
+         "/parquet/parcels_enriched_api.parquet"
+        ]
+       ]
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "TrpcHandlerServiceRoleD16CD14E",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "TrpcHandlerServiceRoleDefaultPolicy02D349B8",
+    "TrpcHandlerServiceRoleD16CD14E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/TrpcHandler/Resource",
+    "aws:asset:path": "asset.04f422d9737a6550c6bfa8465d7519d32d959a25fe0c09cedcaf8c2a4bda04a1",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "HttpApiF5A9A8A7": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "CorsConfiguration": {
+     "AllowHeaders": [
+      "Content-Type",
+      "Authorization"
+     ],
+     "AllowMethods": [
+      "*"
+     ],
+     "AllowOrigins": [
+      "*"
+     ]
+    },
+    "Name": "oracle-rock-island-api",
+    "ProtocolType": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/HttpApi/Resource"
+   }
+  },
+  "HttpApiDefaultStage3EEB07D6": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "ApiId": {
+     "Ref": "HttpApiF5A9A8A7"
+    },
+    "AutoDeploy": true,
+    "StageName": "$default"
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/HttpApi/DefaultStage/Resource"
+   }
+  },
+  "HttpApiANYproxyTrpcIntegrationCF37552D": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "HttpApiF5A9A8A7"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::GetAtt": [
+      "TrpcHandler23206048",
+      "Arn"
+     ]
+    },
+    "PayloadFormatVersion": "2.0"
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/HttpApi/ANY--{proxy+}/TrpcIntegration/Resource"
+   }
+  },
+  "HttpApiANYproxyTrpcIntegrationPermission1BC34BBB": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TrpcHandler23206048",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-2:680482610668:",
+       {
+        "Ref": "HttpApiF5A9A8A7"
+       },
+       "/*/*/{proxy+}"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/HttpApi/ANY--{proxy+}/TrpcIntegration-Permission"
+   }
+  },
+  "HttpApiANYproxy435A1FB9": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "HttpApiF5A9A8A7"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /{proxy+}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "HttpApiANYproxyTrpcIntegrationCF37552D"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/HttpApi/ANY--{proxy+}/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/12PzWrDMBCEnyV3edvakHsSKM2lLc4DmI2tmPWPZLyrmCD07kWW20BP38wwGkk55PsCXne4cFY3fTbQFfxFsO4VLlx5LsAfXd1rUaeb2VTCtx2ofjzjzSdzRNZBDTheG6yMbXTH8Lni3ZlayBpFOIIv7aDjxMrnYlJBcVEhsxaGQ8Q2CP50M387sa7nkZjJmqBwohZFL/i45+A/RKbDRLEUEe1FsF3vTCJGpXWS1NmIbmf8Hf5n114Ian1MPE6mjfmXk8lJUPGj0PHLPX+DPeS7jomy2RmhUUOZ+AOy2IbfcgEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "OracleRockIslandApiStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ApiUrl": {
+   "Description": "API Gateway URL — set as NEXT_PUBLIC_API_URL for apps/web",
+   "Value": {
+    "Fn::GetAtt": [
+     "HttpApiF5A9A8A7",
+     "ApiEndpoint"
+    ]
+   }
+  },
+  "ParquetBucketName": {
+   "Description": "Upload parcels_enriched_api.parquet here",
+   "Value": {
+    "Ref": "ParquetDataBucket63F3F6DB"
+   }
+  },
+  "ParquetS3Uri": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "s3://",
+      {
+       "Ref": "ParquetDataBucket63F3F6DB"
+      },
+      "/parquet/parcels_enriched_api.parquet"
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

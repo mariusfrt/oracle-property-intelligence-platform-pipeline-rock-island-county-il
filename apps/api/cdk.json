@@ -1,0 +1,9 @@
+{
+  "app": "tsx cdk/bin/app.ts",
+  "watch": {
+    "include": ["cdk/**/*.ts", "src/**/*.ts"]
+  },
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true
+  }
+}

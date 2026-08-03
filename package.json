@@ -3,7 +3,11 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "ingest": "pnpm --filter @oracle/pipeline ingest"
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "ingest": "pnpm --filter @oracle/pipeline ingest",
+    "enrich": "pnpm --filter @oracle/pipeline enrich"
   },
   "devDependencies": {
     "turbo": "^2.3.3"

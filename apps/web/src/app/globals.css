@@ -1,0 +1,43 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #111827;
+  background: #f9fafb;
+}
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+table th,
+table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+input[type="number"],
+input[type="search"],
+input[type="password"] {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+}
+
+button {
+  cursor: pointer;
+  padding: 8px 12px;
+}

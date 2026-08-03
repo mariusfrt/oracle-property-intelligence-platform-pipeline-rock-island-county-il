@@ -1,2 +1,4 @@
 packages:
   - "pipeline"
+  - "apps/*"
+  - "packages/*"
