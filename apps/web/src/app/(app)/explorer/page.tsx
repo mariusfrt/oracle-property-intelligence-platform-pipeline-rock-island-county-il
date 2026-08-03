@@ -14,6 +14,8 @@ import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { trpc } from "@/lib/trpc-react";
 
 const PAGE_SIZE = 50;
+// The results table pages 50 at a time; the map shows all matches up to this cap.
+const MAP_LIMIT = 500;
 
 type QueryMode = "idle" | "search";
 type ResultsMode = "search" | "agent";
@@ -33,16 +35,19 @@ export default function ExplorerPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [mobileView, setMobileView] = useState<MobileView>("list");
 
-  // Debounced so typing in the filters (especially free text) does not fire a
-  // request on every keystroke. Memoized input keeps the debounce timer stable.
-  const searchInput = useMemo(
-    () => ({ ...filters, page, pageSize: PAGE_SIZE }),
-    [filters, page],
+  // Debounce the filter values so typing does not fire a request per keystroke.
+  // Pagination stays immediate (page is not debounced). The table pages 50 rows;
+  // the map runs its own query for all matches up to MAP_LIMIT, so it is not
+  // limited to the current page.
+  const debouncedFilters = useDebouncedValue(filters, 350);
+  const searchQuery = trpc.parcels.searchParcels.useQuery(
+    { ...debouncedFilters, page, pageSize: PAGE_SIZE },
+    { enabled: queryMode === "search" },
   );
-  const debouncedInput = useDebouncedValue(searchInput, 350);
-  const searchQuery = trpc.parcels.searchParcels.useQuery(debouncedInput, {
-    enabled: queryMode === "search",
-  });
+  const mapQuery = trpc.parcels.searchParcels.useQuery(
+    { ...debouncedFilters, page: 1, pageSize: MAP_LIMIT },
+    { enabled: queryMode === "search" },
+  );
 
   const searchRows = mapParcelRows((searchQuery.data?.rows ?? []) as Record<string, unknown>[]);
   const agentRows = mapParcelRows(agentParcels);
@@ -104,14 +109,17 @@ export default function ExplorerPage() {
   // every interaction (e.g. selecting a parcel), breaking auto-fit.
   const mapParcels = useMemo(() => {
     const src = (
-      resultsMode === "agent" ? agentParcels : (searchQuery.data?.rows ?? [])
+      resultsMode === "agent" ? agentParcels : (mapQuery.data?.rows ?? [])
     ) as Record<string, unknown>[];
     return mapParcelRows(src).map((r) => ({
       objectid: r.objectid,
       geom_geojson: r.geom_geojson ?? null,
       label: r.pin ?? String(r.objectid),
     }));
-  }, [resultsMode, agentParcels, searchQuery.data]);
+  }, [resultsMode, agentParcels, mapQuery.data]);
+
+  const mapCapped =
+    resultsMode === "search" && (mapQuery.data?.total ?? 0) > MAP_LIMIT;
 
   const resultsProps = {
     rows,
@@ -201,7 +209,7 @@ export default function ExplorerPage() {
                 </button>
               </div>
             ) : (
-              <div className="flex shrink-0 items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+              <div className="flex shrink-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
                 <p className="text-sm font-semibold text-slate-800">
                   Search results
                   {queryMode !== "idle" ? (
@@ -210,6 +218,11 @@ export default function ExplorerPage() {
                     </span>
                   ) : null}
                 </p>
+                {mapCapped ? (
+                  <span className="shrink-0 text-xs text-slate-500">
+                    Map shows first {MAP_LIMIT.toLocaleString()}
+                  </span>
+                ) : null}
               </div>
             )}
             <ResultsTable {...resultsProps} className="min-h-0 flex-1" />

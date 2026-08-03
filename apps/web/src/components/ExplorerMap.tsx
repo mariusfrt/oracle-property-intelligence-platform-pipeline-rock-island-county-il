@@ -9,6 +9,7 @@ const DEFAULT_CENTER: [number, number] = [-90.57, 41.48];
 
 const FILL_LAYER = "parcels-fill";
 const OUTLINE_LAYER = "parcels-outline";
+const HIGHLIGHT_FILL = "parcels-highlight-fill";
 const HIGHLIGHT_LAYER = "parcels-highlight";
 const SOURCE_ID = "parcels";
 const POINT_SOURCE = "parcel-points";
@@ -174,10 +175,17 @@ export function ExplorerMap({
         paint: { "line-color": "#4338ca", "line-width": 1.5, "line-opacity": 0.9 },
       });
       map.addLayer({
+        id: HIGHLIGHT_FILL,
+        type: "fill",
+        source: SOURCE_ID,
+        paint: { "fill-color": "#f59e0b", "fill-opacity": 0.45 },
+        filter: ["==", ["get", "objectid"], -1],
+      });
+      map.addLayer({
         id: HIGHLIGHT_LAYER,
         type: "line",
         source: SOURCE_ID,
-        paint: { "line-color": "#f59e0b", "line-width": 3, "line-opacity": 0.95 },
+        paint: { "line-color": "#f59e0b", "line-width": 4, "line-opacity": 1 },
         filter: ["==", ["get", "objectid"], -1],
       });
       // Marker dots keep parcels visible at any zoom; fade as you zoom into the polygons.
@@ -244,11 +252,13 @@ export function ExplorerMap({
 
     const updateHighlight = () => {
       if (!map.getLayer(HIGHLIGHT_LAYER)) return;
-      map.setFilter(HIGHLIGHT_LAYER, [
+      const filter: maplibregl.FilterSpecification = [
         "==",
         ["get", "objectid"],
         selectedObjectId ?? -1,
-      ]);
+      ];
+      map.setFilter(HIGHLIGHT_LAYER, filter);
+      map.setFilter(HIGHLIGHT_FILL, filter);
     };
 
     if (loadedRef.current) updateHighlight();

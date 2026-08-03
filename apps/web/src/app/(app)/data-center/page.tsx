@@ -11,6 +11,8 @@ import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { trpc } from "@/lib/trpc-react";
 
 const PAGE_SIZE = 50;
+// The results table pages 50 at a time; the map shows all candidates up to this cap.
+const MAP_LIMIT = 500;
 
 const SLIDER_FILL = "rgb(79 70 229)"; // indigo-600
 const SLIDER_TRACK = "rgb(226 232 240)"; // slate-200
@@ -36,20 +38,24 @@ export default function DataCenterPage() {
 
   // Loads on mount with the default thresholds. Debounced so dragging a slider
   // does not fire a request on every step; the query re-runs once you settle.
-  const queryInput = useMemo(
-    () => ({ minAcres, powerRadiusM, page, pageSize: PAGE_SIZE }),
-    [minAcres, powerRadiusM, page],
+  const thresholds = useMemo(() => ({ minAcres, powerRadiusM }), [minAcres, powerRadiusM]);
+  const debouncedThresholds = useDebouncedValue(thresholds, 350);
+  const candidatesQuery = trpc.parcels.dataCenterCandidates.useQuery(
+    { ...debouncedThresholds, page, pageSize: PAGE_SIZE },
+    { enabled: true },
   );
-  const debouncedInput = useDebouncedValue(queryInput, 350);
-  const candidatesQuery = trpc.parcels.dataCenterCandidates.useQuery(debouncedInput, {
-    enabled: true,
-  });
+  // Separate query so the map shows all candidates up to MAP_LIMIT, not just one page.
+  const mapQuery = trpc.parcels.dataCenterCandidates.useQuery(
+    { ...debouncedThresholds, page: 1, pageSize: MAP_LIMIT },
+    { enabled: true },
+  );
 
   const rows = useMemo(
     () => mapParcelRows((candidatesQuery.data?.rows ?? []) as Record<string, unknown>[]),
     [candidatesQuery.data],
   );
   const total = candidatesQuery.data?.total ?? 0;
+  const mapCapped = (mapQuery.data?.total ?? 0) > MAP_LIMIT;
 
   const parcelDetailQuery = trpc.parcels.parcel.useQuery(
     { objectid: selectedId ?? 0 },
@@ -70,12 +76,12 @@ export default function DataCenterPage() {
 
   const mapParcels = useMemo(
     () =>
-      rows.map((r) => ({
+      mapParcelRows((mapQuery.data?.rows ?? []) as Record<string, unknown>[]).map((r) => ({
         objectid: r.objectid,
         geom_geojson: r.geom_geojson ?? null,
         label: r.pin ?? String(r.objectid),
       })),
-    [rows],
+    [mapQuery.data],
   );
 
   const criteria = [
@@ -156,6 +162,11 @@ export default function DataCenterPage() {
 
         <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
           <ViewToggle value={mobileView} onChange={setMobileView} className="lg:hidden" />
+          {mapCapped ? (
+            <span className="text-xs text-slate-500">
+              Map shows first {MAP_LIMIT.toLocaleString()}
+            </span>
+          ) : null}
           {candidatesQuery.isFetching ? (
             <span className="text-xs text-slate-500">Updating…</span>
           ) : null}

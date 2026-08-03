@@ -135,7 +135,7 @@ export function RunSummary({ summary, artifacts = null, loading }: RunSummaryPro
               County coverage · parcels ingested
               <InfoTooltip text="These figures are read live from cloud storage each time the page loads. There is no always-on database to run or maintain." />
             </p>
-            <p className="text-4xl font-semibold leading-none tracking-tight text-slate-900 tabular-nums sm:text-5xl">
+            <p className="text-2xl font-semibold leading-none tracking-tight text-slate-900 tabular-nums sm:text-3xl">
               {parcels.count.toLocaleString()}
             </p>
           </div>
@@ -198,7 +198,7 @@ export function RunSummary({ summary, artifacts = null, loading }: RunSummaryPro
                     {layer.count.toLocaleString()}
                   </td>
                   <td className="px-5 py-3 text-slate-600">
-                    {formatRetrieved(layer.retrievedAt) ?? "—"}
+                    {formatRetrieved(layer.retrievedAt) ?? "-"}
                   </td>
                   <td className="px-5 py-3">
                     {layer.sourceUrl ? (
@@ -211,7 +211,7 @@ export function RunSummary({ summary, artifacts = null, loading }: RunSummaryPro
                         View source
                       </a>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </td>
                 </tr>
