@@ -3,6 +3,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import path from "node:path";
@@ -54,12 +55,13 @@ export class ApiStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "handler",
       memorySize: 1536,
-      timeout: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE,
       environment: {
         NODE_OPTIONS: "--enable-source-maps",
         POWERTOOLS_SERVICE_NAME: "oracle-rock-island-api",
         POWERTOOLS_METRICS_NAMESPACE: "OracleRockIsland",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         // Relative to /var/task — file is copied into the asset via commandHooks.
         PARQUET_PATH: "parcels_enriched_api.parquet",
       },
@@ -101,6 +103,16 @@ export class ApiStack extends cdk.Stack {
         },
       },
     });
+
+    handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+        resources: [
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-5*",
+          "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-sonnet-4-5*",
+        ],
+      }),
+    );
 
     this.httpApi = new apigwv2.HttpApi(this, "HttpApi", {
       apiName: "oracle-rock-island-api",

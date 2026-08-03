@@ -4,7 +4,7 @@ import {
   buildDataCenterWhereClause,
   buildPresetWhereClause,
   buildSearchWhereClause,
-} from "./routers/parcels.js";
+} from "./queries/parcels.js";
 
 describe("escapeLikePattern", () => {
   it("escapes LIKE metacharacters", () => {

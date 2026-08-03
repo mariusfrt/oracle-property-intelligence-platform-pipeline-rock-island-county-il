@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Run Summary" },
   { href: "/explorer", label: "Explorer" },
   { href: "/data-center", label: "Data-center" },
+  { href: "/agent", label: "Agent" },
 ] as const;
 
 export function AppNav() {
