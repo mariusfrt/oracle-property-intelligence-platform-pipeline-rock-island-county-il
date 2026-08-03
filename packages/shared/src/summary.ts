@@ -59,5 +59,4 @@ export const DOCUMENTED_LAYER_COUNTS = {
 export const GLOBAL_LIMITATIONS = [
   "Roof age is estimated from the year each building was built, so it is an approximation. Permit records would give a more exact figure where they are available.",
   "When a parcel has no sale on record, it is treated as long held. A missing sale date does not prove the parcel was never sold.",
-  "The county service includes about 126 administrative placeholder records (federal, railroad, levee, and lock and dam features) with non-numeric parcel numbers, some of which sit along the river outside the county. Property searches exclude these and return the numbered parcels; the total above reflects the full ingested count.",
 ] as const;
